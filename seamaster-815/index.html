@@ -11,6 +11,7 @@
     <a href="#start" class="logo">⚓ <span data-bind="nazwa"></span></a>
     <div class="links">
       <a href="#wizualizacja">Wizualizacja</a>
+      <a href="#spacer3d">Spacer 3D</a>
       <a href="#dane">Dane</a>
       <a href="#historia">Historia</a>
       <a href="#galeria">Galeria</a>
@@ -205,6 +206,33 @@
       </div>
     </section>
 
+    <section id="spacer3d">
+      <h2>Spacer 3D</h2>
+      <p class="sub">Uproszczony model 3D Tatulatora (proporcje z rysunku technicznego, detale ze zdjęć). Wybierz miejsce albo spaceruj sam: przeciągnij, żeby się rozejrzeć, a strzałkami lub przyciskami idź.</p>
+      <div class="viz-controls">
+        <button class="btn toggle" data-stop="zewnatrz">🔄 Dookoła</button>
+        <button class="btn toggle" data-stop="gora">🛩️ Z góry</button>
+        <button class="btn toggle" data-stop="kokpit">🧭 Kokpit</button>
+        <button class="btn toggle" data-stop="mesa">☕ Mesa</button>
+        <button class="btn toggle" data-stop="dziob">⚓ Dziób</button>
+        <button class="btn ghost" id="s3dSails">⛵ Postaw żagle</button>
+      </div>
+      <div class="viz-wrap s3d-wrap" id="s3dWrap">
+        <canvas id="s3d"></canvas>
+        <div class="dpad" id="dpad" hidden>
+          <button data-k="f" aria-label="Naprzód">▲</button>
+          <button data-k="l" aria-label="W lewo">◀</button>
+          <button data-k="b" aria-label="Do tyłu">▼</button>
+          <button data-k="r" aria-label="W prawo">▶</button>
+        </div>
+        <p class="s3d-fallback" hidden>Twoja przeglądarka nie wyświetla grafiki 3D (WebGL). Spróbuj w innej przeglądarce.</p>
+      </div>
+      <div class="viz-info s3d-info">
+        <b id="s3dTitle"></b>
+        <span id="s3dText"></span>
+      </div>
+    </section>
+
     <section id="dane">
       <h2>Dane techniczne</h2>
       <div class="grid specs" id="specs"></div>
@@ -259,5 +287,7 @@
 
   <script src="dane.js"></script>
   <script src="app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="spacer3d.js"></script>
 </body>
 </html>
