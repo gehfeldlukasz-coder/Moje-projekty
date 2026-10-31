@@ -6,9 +6,9 @@ const JACHT = {
   nazwa: "Tatulator",
   rejestracja: "PL00016R",         // ← sprawdź z dokumentami
   typ: "Seamaster 815",
-  portMacierzysty: "uzupełnij",     // np. "Gdynia, Marina Yacht Park"
+  portMacierzysty: "Stepnica",
   rokBudowy: "uzupełnij",           // np. 1978
-  bandera: "PL",
+  bandera: "Polska",
   opis:
     "Klasyczny, dzielny jacht rodzinny zaprojektowany przez biuro Holman & Pye. " +
     "Słynie z bardzo dobrych właściwości żeglarskich i zaskakująco wygodnego " +
@@ -24,7 +24,8 @@ const JACHT = {
     { etykieta: "Ożaglowanie", wartosc: "slup", ikona: "⛵" },
     { etykieta: "Kil", wartosc: "płetwowy", ikona: "▼" },
     { etykieta: "Kadłub", wartosc: "laminat (GRP)", ikona: "◆" },
-    { etykieta: "Silnik", wartosc: "zaburtowy", ikona: "⚙" },
+    { etykieta: "Silnik stacjonarny", wartosc: "Volvo Penta MD6A, 10 KM", ikona: "⚙" },
+    { etykieta: "Silnik zaburtowy", wartosc: "Storm, 20 KM", ikona: "⚙" },
     { etykieta: "Koje", wartosc: "uzupełnij", ikona: "☾" },
   ],
 
@@ -33,7 +34,7 @@ const JACHT = {
     { rok: "1976", tekst: "Start produkcji seryjnej Seamaster 815." },
     { rok: "1981", tekst: "Koniec produkcji – powstało ok. 136 egzemplarzy." },
     { rok: "17.10.2026", tekst: "Transport lądem na przyczepie: Stepnica → Budzień." },
-    { rok: "dziś", tekst: "Jako „Tatulator” pływa pod polską banderą. ⚓" },
+    { rok: "dziś", tekst: "Jako „Tatulator” pływa pod polską banderą, port macierzysty: Stepnica. ⚓" },
   ],
 
   wyposazenie: [
@@ -41,7 +42,8 @@ const JACHT = {
     "Grot w lazy bagu",
     "Buda (sprayhood)",
     "Pokład z okładziną typu teak",
-    "Silnik zaburtowy",
+    "Silnik stacjonarny Volvo Penta MD6A (10 KM)",
+    "Silnik zaburtowy Storm (20 KM)",
     "Pulpit dziobowy, kosz rufowy i relingi",
     "Luk dziobowy",
     "Antena i wiatrowskaz na topie masztu",
@@ -49,7 +51,7 @@ const JACHT = {
     "Ploter nawigacyjny",
     "Echosonda i wyświetlacze przyrządów",
     "Kompas w kokpicie",
-    "Panel silnika w kokpicie",
+    "Panel silnika Volvo Penta w kokpicie",
     "Kabestany (winsze) na zrębnicach",
     "Drewniane wykończenie kokpitu i siedziska",
     "Grot Apollo Sails",
@@ -66,7 +68,7 @@ const JACHT = {
     buda: "Niebieska buda (sprayhood) z przezroczystym oknem chroni zejściówkę i kokpit.",
     poklad: "Pokład z brązową okładziną typu teak na dziobie i przy nadbudówce.",
     kadlub: "Biały kadłub z laminatu z podwójnym brązowym pasem wzdłuż burty.",
-    rufa: "Rufa: kosz rufowy, koło ratunkowe, bandera i silnik zaburtowy. Na pawęży róża wiatrów i numer rejestracyjny.",
+    rufa: "Rufa: kosz rufowy, koło ratunkowe, bandera i silnik zaburtowy Storm 20 KM. Na pawęży róża wiatrów i numer rejestracyjny.",
     ster: "Ster zawieszany na pawęży – płetwa sterowa schodzi pod wodę za rufą.",
     kil: "Kil płetwowy – zanurzenie ok. 1,37 m.",
   },
