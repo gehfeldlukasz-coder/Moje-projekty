@@ -162,6 +162,57 @@
     );
   }
 
+  // ---------- tekstura teaku (deski ze spoinami, UV w metrach) ----------
+  M.chrome = std("#e6ebef", { metalness: 0.25, roughness: 0.15 });
+  M.rope = std("#ecebe4", { roughness: 0.9 });
+  const teakTex = (() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 256;
+    const g = c.getContext("2d");
+    let sd = 3;
+    const r = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 4; i++) {
+      const d = i % 2 ? 10 : -6;
+      g.fillStyle = `rgb(${132 + d},${78 + d},${42 + d})`;
+      g.fillRect(0, i * 64, 256, 64);
+      for (let k = 0; k < 40; k++) {
+        const y = i * 64 + r() * 58;
+        g.strokeStyle = `rgba(60,30,10,${0.05 + r() * 0.1})`;
+        g.beginPath();
+        g.moveTo(0, y);
+        g.bezierCurveTo(85, y + r() * 4 - 2, 170, y + r() * 4 - 2, 256, y);
+        g.stroke();
+      }
+      g.fillStyle = "#24160d";
+      g.fillRect(0, i * 64 + 59, 256, 5);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = 4;
+    return t;
+  })();
+  M.teakT = new THREE.MeshStandardMaterial({ map: teakTex, roughness: 0.8, side: THREE.DoubleSide });
+  const UVS = 1 / 0.24; // 4 deski na 24 cm
+  function worldUV(mesh, along = "x") {
+    const g = mesh.geometry, p = g.attributes.position, uv = [], v = new V3();
+    mesh.updateMatrix();
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(mesh.matrix);
+      uv.push((along === "x" ? v.x : v.z) * UVS, ((along === "x" ? v.z : v.x) + v.y) * UVS);
+    }
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    return mesh;
+  }
+  const tbox = (x0, x1, y0, y1, z0, z1, along, parent) => worldUV(box(x0, x1, y0, y1, z0, z1, M.teakT, parent), along);
+  const disc = (x, y, z, r, mat, th = 0.02, axis = "x") => {
+    const m = add(new THREE.Mesh(new THREE.CylinderGeometry(r, r, th, 24), mat));
+    if (axis === "x") m.rotation.z = Math.PI / 2;
+    if (axis === "z") m.rotation.x = Math.PI / 2;
+    m.position.set(x, y, z);
+    return m;
+  };
+  const zs = (s, a, b) => (s > 0 ? [a, b] : [-b, -a]);
+
   // ---------- kadłub ----------
   {
     const N = 90, K = 18, R = 2 * K + 1;
@@ -226,59 +277,85 @@
 
   // ---------- pokład ----------
   {
-    const pos = [], col = [];
-    const cW = new THREE.Color("#f2f4f6"), cT = new THREE.Color("#7b4a2a");
-    const N = 140;
-    const inner = (x) => {
-      if (x > 0.35 && x < 2.25) return 0.9;
-      if (x >= 2.25 && x < 5.8) return cabBase(x);
-      return Math.min(0.9, hb(x) * 0.55);
-    };
+    const W = { pos: [], uv: [] }, T = { pos: [], uv: [] };
+    const N = 160;
     const pt = (x, z) => {
       const h = Math.max(hb(x), 0.01);
-      return [x, sheer(x) + 0.04 * (1 - Math.pow(z / h, 2)), z];
+      return [x, sheer(x) + 0.04 * (1 - Math.pow(Math.min(1, Math.abs(z) / h), 2)), z];
     };
-    const quad = (a, b, c, d, color) => {
-      for (const p of [a, b, c, a, c, d]) { pos.push(...p); col.push(color.r, color.g, color.b); }
+    const zone = (x) => (x < 0.35 ? "aft" : x < 2.25 ? "cockpit" : x < 5.8 ? "cabin" : x < 7.45 ? "fore" : "bow");
+    // pasy pokładu dla prawej burty [z0, z1, typ]; lewa – lustrzanie
+    const bands = (x, zn) => {
+      const h = Math.max(hb(x), 0.004), e = Math.min(0.08, h * 0.3);
+      let b;
+      if (zn === "cockpit") b = [[0.9, h, "w"]];
+      else if (zn === "cabin") b = [[cabBase(x), h - e, "t"], [h - e, h, "w"]];
+      else if (zn === "fore") {
+        const w = Math.min(h - e - 0.02, 0.36 * clamp((7.3 - x) / 1.5, 0, 1)); // biały klin w kształcie V
+        b = [[0, w, "w"], [w, h - e, "t"], [h - e, h, "w"]];
+      } else b = [[0, h, "w"]];
+      return [...b.slice().reverse().map(([a, c, t]) => [-c, -a, t]), ...b];
     };
     for (let i = 0; i < N; i++) {
-      const x0 = (LOA * i) / N, x1 = (LOA * (i + 1)) / N, xm = (x0 + x1) / 2;
-      const h0 = hb(x0), h1 = hb(x1);
-      const in0 = Math.min(inner(xm), h0 * 0.95), in1 = Math.min(inner(xm), h1 * 0.95);
-      const sideTeak = (xm > 2.3 && xm < 5.7) || (xm > 5.85 && xm < 7.35);
-      for (const s of [1, -1]) {
-        quad(pt(x0, s * in0), pt(x1, s * in1), pt(x1, s * h1), pt(x0, s * h0), sideTeak ? cT : cW);
-      }
-      if (xm < 0.35 || xm > 5.8) {
-        const midTeak = xm > 5.95 && xm < 7.2;
-        quad(pt(x0, -in0), pt(x1, -in1), pt(x1, in1), pt(x0, in0), midTeak ? cT : cW);
-      }
+      const x0 = (LOA * i) / N, x1 = (LOA * (i + 1)) / N, zn = zone((x0 + x1) / 2);
+      const b0 = bands(x0, zn), b1 = bands(x1, zn);
+      b0.forEach(([a0, c0, t], k) => {
+        const [a1, c1] = b1[k];
+        const tgt = t === "t" ? T : W;
+        for (const [x, z] of [[x0, a0], [x1, a1], [x1, c1], [x0, a0], [x1, c1], [x0, c0]]) {
+          tgt.pos.push(...pt(x, z));
+          tgt.uv.push(x * UVS, z * UVS);
+        }
+      });
     }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
-    g.computeVertexNormals();
-    add(new THREE.Mesh(g, M.deck));
+    for (const [D, mat] of [[W, std("#f2f4f6", { side: THREE.DoubleSide })], [T, M.teakT]]) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(D.pos, 3));
+      g.setAttribute("uv", new THREE.Float32BufferAttribute(D.uv, 2));
+      g.computeVertexNormals();
+      add(new THREE.Mesh(g, mat));
+    }
   }
-  // luk dziobowy
-  box(6.0, 6.5, sheer(6.2), sheer(6.2) + 0.12, -0.28, 0.28, M.white);
-  box(6.03, 6.47, sheer(6.2) + 0.12, sheer(6.2) + 0.14, -0.25, 0.25, M.glass);
+  // luk dziobowy z kratką, wlewy i knagi
+  {
+    const y0 = sheer(6.2) + 0.03;
+    box(5.98, 6.46, y0, y0 + 0.1, -0.27, 0.27, M.white);
+    box(6.01, 6.43, y0 + 0.1, y0 + 0.11, -0.24, 0.24, std("#34404b", { roughness: 0.15 }));
+    for (let k = 0; k < 6; k++) rod(new V3(6.06 + k * 0.064, y0 + 0.125, -0.22), new V3(6.06 + k * 0.064, y0 + 0.125, 0.22), 0.009, M.chrome);
+    for (const z of [-0.22, 0.22]) rod(new V3(6.04, y0 + 0.125, z), new V3(6.4, y0 + 0.125, z), 0.009, M.chrome);
+    disc(6.75, sheer(6.75) + 0.045, 0, 0.055, M.chrome, 0.02, "y");
+    for (const z of [-0.17, 0.17]) disc(7.05, sheer(7.05) + 0.04, z, 0.04, M.chrome, 0.015, "y");
+    for (const z of [-0.2, 0.2]) {
+      box(7.32, 7.5, sheer(7.4) + 0.055, sheer(7.4) + 0.075, z - 0.02, z + 0.02, M.chrome);
+      box(7.37, 7.45, sheer(7.4) + 0.02, sheer(7.4) + 0.06, z - 0.015, z + 0.015, M.chrome);
+    }
+  }
 
   // ---------- kokpit ----------
   const CF = 0.62; // podłoga kokpitu
-  box(0.35, 2.25, CF - 0.04, CF, -0.9, 0.9, M.teak);
+  tbox(0.35, 2.05, CF - 0.04, CF, -0.9, 0.9); // kratka podłogi
   for (const s of [1, -1]) {
-    box(0.35, 2.25, CF - 0.04, sheer(1.3), s > 0 ? 0.9 : -0.94, s > 0 ? 0.94 : -0.9, M.white);
-    box(0.45, 2.2, CF, 1.0, s > 0 ? 0.52 : -0.9, s > 0 ? 0.9 : -0.52, M.white);
-    box(0.45, 2.2, 1.0, 1.03, s > 0 ? 0.52 : -0.9, s > 0 ? 0.9 : -0.52, M.teak);
-    box(0.4, 2.25, sheer(1.3) - 0.02, sheer(1.3) + 0.17, s > 0 ? 0.94 : -0.98, s > 0 ? 0.98 : -0.94, M.teak);
-    // kabestany
-    const wch = add(new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 16), M.steel));
-    wch.position.set(1.0, sheer(1.0) + 0.24, s * 0.97);
+    box(0.35, 2.25, CF - 0.04, sheer(1.3), ...zs(s, 0.9, 0.94), M.white);
+    box(0.45, 2.05, CF, 1.0, ...zs(s, 0.52, 0.9), M.white);
+    tbox(0.45, 2.05, 1.0, 1.035, ...zs(s, 0.52, 0.9)); // siedziska z listew teakowych
+    box(0.4, 2.25, sheer(1.3) - 0.02, sheer(1.3) + 0.17, ...zs(s, 0.94, 0.985), M.mahogany); // mahoniowa zrębnica
+    // kabestan samoostrzący
+    disc(0.95, sheer(0.95) + 0.22, s * 0.99, 0.09, M.chrome, 0.12, "y");
+    disc(0.95, sheer(0.95) + 0.3, s * 0.99, 0.065, M.chrome, 0.05, "y");
+    disc(0.95, sheer(0.95) + 0.34, s * 0.99, 0.05, M.black, 0.04, "y");
   }
   box(0.33, 0.37, CF - 0.04, 1.06, -0.94, 0.94, M.white);
-  // panel silnika
-  box(2.22, 2.24, 0.68, 0.95, -0.85, -0.55, M.dark);
+  // mostek przed zejściówką: szyna szotu grota, panel silnika Volvo Penta
+  box(2.05, 2.25, CF, 0.98, -0.9, 0.9, M.white);
+  box(2.02, 2.25, 0.98, 1.03, -0.9, 0.9, M.mahogany);
+  box(2.07, 2.2, 1.03, 1.05, -0.8, 0.8, M.chrome);
+  box(2.09, 2.18, 1.05, 1.09, -0.06, 0.06, M.dark);
+  box(2.035, 2.05, 0.66, 0.95, -0.36, 0.36, M.mahogany);
+  for (const [z, r] of [[-0.24, 0.032], [-0.08, 0.055], [0.08, 0.032], [0.22, 0.03]]) {
+    disc(2.03, 0.83, z, r + 0.008, M.black, 0.012);
+    disc(2.025, 0.83, z, r, M.white, 0.006);
+  }
+  box(2.02, 2.035, 0.72, 0.75, -0.02, 0.02, M.chrome); // stacyjka
 
   // ---------- nadbudówka ----------
   const windows = [
@@ -295,6 +372,8 @@
       add(new THREE.Mesh(mappedShape(shapeOf(w), map), M.glass));
       const pts = [...w, w[0]].map(([u, v]) => { const p = map(u, v); p.z += side * 0.004; return p; });
       add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), M.frame));
+      const inner = [...w, w[0]].map(([u, v]) => { const p = map(u, v); p.z -= side * 0.012; return p; });
+      poly(inner, 0.014, std("#7a2a18"));
     }
   }
   // dach
@@ -339,12 +418,34 @@
     const s0 = sheer(2.25) - 0.02, top = [];
     for (let k = 0; k <= 10; k++) { const v = 1 - k / 5; top.push([0.95 * v, ROOF + 0.05 * (1 - v * v)]); }
     const shape = shapeOf([[-0.9, CF - 0.04], [0.9, CF - 0.04], [0.9, s0], [1.0, s0], ...top, [-1.0, s0], [-0.9, s0]]);
-    shape.holes.push(pathOf([[-0.3, 0.72], [0.3, 0.72], [0.3, 1.56], [-0.3, 1.56]]));
+    shape.holes.push(pathOf([[-0.3, 1.03], [0.3, 1.03], [0.3, 1.56], [-0.3, 1.56]]));
     const g = orient(mappedShape(shape, (u, v) => new V3(2.25, v, u)), () => new V3(-1, 0, 0));
     twoSided(g, M.white, M.mahoganyIn);
   }
+  // mahoniowa rama zejściówki
+  for (const z of [-0.33, 0.33]) box(2.22, 2.26, 1.0, 1.6, z - 0.035, z + 0.035, M.mahogany);
+  box(2.22, 2.26, 1.56, 1.63, -0.37, 0.37, M.mahogany);
+  // przesuwana klapa zejściówki
+  box(2.25, 2.85, ROOF + 0.05, ROOF + 0.11, -0.35, 0.35, M.white);
+  for (const z of [-0.38, 0.38]) box(2.25, 2.95, ROOF + 0.03, ROOF + 0.12, z - 0.025, z + 0.025, M.mahogany);
+  // instrumenty na grodzi: kompas i dwa wyświetlacze (prawa), echosonda i niebieska kieszeń (lewa)
+  disc(2.235, 1.42, 0.52, 0.075, M.black, 0.04);
+  disc(2.21, 1.42, 0.52, 0.045, std("#b8262b"), 0.01);
+  for (const y of [1.25, 1.12]) {
+    box(2.225, 2.25, y - 0.055, y + 0.055, 0.47, 0.57, M.black);
+    box(2.221, 2.226, y - 0.04, y + 0.04, 0.482, 0.558, std("#cfdcb8"));
+  }
+  box(2.215, 2.25, 1.38, 1.47, -0.62, -0.47, std("#8d949b"));
+  box(2.212, 2.216, 1.39, 1.46, -0.6, -0.52, std("#3a6d8c"));
+  box(2.21, 2.25, 1.08, 1.3, -0.8, -0.52, M.blue);
+  rod(new V3(2.2, 1.28, -0.56), new V3(2.2, 1.33, -0.47), 0.014, std("#d22"));
+  // ploter na wysięgniku pod budą
+  rod(new V3(2.3, ROOF + 0.02, -0.55), new V3(2.27, ROOF + 0.12, -0.55), 0.012, M.black);
+  box(2.24, 2.27, ROOF + 0.1, ROOF + 0.22, -0.65, -0.45, M.black);
+  box(2.236, 2.24, ROOF + 0.11, ROOF + 0.21, -0.64, -0.46, std("#2e5f7a"));
+
   // teak i poręcze na dachu
-  box(3.2, 4.25, ROOF + 0.045, ROOF + 0.06, -0.42, 0.42, M.teak);
+  tbox(3.2, 4.25, ROOF + 0.045, ROOF + 0.06, -0.42, 0.42);
   for (const s of [1, -1]) {
     box(2.7, 4.9, ROOF + 0.06, ROOF + 0.1, s * 0.62 - 0.025, s * 0.62 + 0.025, M.teakDark);
   }
@@ -354,9 +455,11 @@
   for (const s of [1, -1]) {
     const z = (a, b) => (s > 0 ? [a, b] : [-b, -a]);
     box(2.75, 4.75, 0.15, 0.55, ...z(0.45, 0.98), M.cushion);
-    box(2.75, 4.75, 0.55, 1.0, ...z(0.98, 1.08), M.cushion);
-    box(2.75, 4.75, 1.0, 1.08, ...z(0.96, 1.12), M.mahogany);
-    box(4.93, 4.97, 0.15, ROOF, ...z(0.42, 1.05), M.mahogany);
+    box(2.75, 4.75, 0.55, 0.85, ...z(0.98, 1.08), M.cushion);
+    box(2.75, 4.75, 0.85, 1.08, ...z(0.98, 1.12), M.mahogany);
+    for (const x of [3.1, 3.75, 4.4]) box(x - 0.26, x + 0.26, 0.89, 1.04, ...z(0.972, 0.98), std("#efebe2")); // szafki z otworami
+    box(4.93, 4.97, 0.15, sheer(4.95) - 0.02, ...z(0.42, 0.98), M.mahogany);
+    box(4.93, 4.97, sheer(4.95) - 0.02, ROOF, ...z(0.42, cabBase(4.95) - 0.04), M.mahogany);
   }
   box(3.1, 4.3, 0.78, 0.82, -0.36, 0.36, M.mahogany);
   box(3.65, 3.75, 0.15, 0.78, -0.05, 0.05, M.steel);
@@ -366,6 +469,9 @@
   box(2.35, 2.55, 0.33, 0.37, -0.28, 0.28, M.mahogany); // stopnie zejściówki
   box(2.27, 2.42, 0.5, 0.54, -0.28, 0.28, M.mahogany);
   box(5.0, 6.4, 0.15, 0.68, -0.72, 0.72, M.cushion); // koja dziobowa (V)
+  box(3.3, 3.95, 1.57, 1.6, -0.66, -0.56, std("#e9eef2", { emissive: "#fff6dc", emissiveIntensity: 0.4 })); // lampa
+  disc(2.27, 1.3, 0.66, 0.065, std("#c9a24a", { metalness: 0.3 }), 0.03); // zegar
+  disc(2.29, 1.3, 0.66, 0.05, M.white, 0.006);
   {
     // gródź komory kotwicznej – zamyka wnętrze od dziobu
     const xb = 6.4, pts = [];
@@ -390,9 +496,31 @@
   }
 
   // ---------- silnik zaburtowy ----------
-  box(-0.45, -0.12, 0.85, 1.3, -0.9, -0.6, M.black);
-  box(-0.32, -0.24, -0.4, 0.85, -0.79, -0.71, M.black);
-  box(-0.42, -0.14, -0.2, -0.17, -0.82, -0.68, M.black);
+  box(-0.1, 0.0, 0.75, 0.95, 0.6, 0.9, M.dark); // wspornik
+  box(-0.45, -0.1, 0.85, 1.3, 0.6, 0.9, M.black);
+  box(-0.44, -0.11, 1.22, 1.3, 0.61, 0.89, std("#3a4148"));
+  box(-0.32, -0.24, -0.4, 0.85, 0.71, 0.79, M.black);
+  box(-0.42, -0.14, -0.2, -0.17, 0.68, 0.82, M.black);
+  {
+    const c = document.createElement("canvas");
+    c.width = c.height = 256;
+    const g = c.getContext("2d");
+    g.translate(128, 128);
+    g.strokeStyle = g.fillStyle = "#1a3570";
+    g.lineWidth = 3;
+    g.beginPath(); g.arc(0, 0, 62, 0, Math.PI * 2); g.stroke();
+    for (let k = 0; k < 8; k++) {
+      const L = k % 2 ? 58 : 112;
+      g.save(); g.rotate((k * Math.PI) / 4);
+      g.beginPath(); g.moveTo(0, -L); g.lineTo(13, 0); g.lineTo(0, 0); g.closePath(); g.globalAlpha = 1; g.fill();
+      g.beginPath(); g.moveTo(0, -L); g.lineTo(-13, 0); g.lineTo(0, 0); g.closePath(); g.globalAlpha = 0.35; g.fill();
+      g.restore();
+    }
+    const rose = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }));
+    rose.position.set(-0.012, 0.6, -0.42);
+    rose.rotation.y = -Math.PI / 2;
+    add(rose);
+  }
 
   // ---------- olinowanie ----------
   rod(new V3(MX, ROOF + 0.05, 0), new V3(MX, MAST_TOP, 0), 0.07, M.mast);
@@ -448,6 +576,15 @@
   const flaked = box(-0.4, -0.08, 2.7, 3.05, -0.1, 0.1, M.sail, boomG);
   const mainsail = add(new THREE.Mesh(sailGeom(new V3(-0.08, 2.42, 0), new V3(-0.08, MAST_TOP - 0.25, 0), new V3(-3.0, 2.45, 0), new V3(0, 0, -0.45)), M.sail), boomG);
 
+  const sheetG = new THREE.Group();
+  boat.add(sheetG);
+  function rigSheet() {
+    sheetG.clear();
+    boomG.updateMatrix();
+    const top = new V3(-2.1, 2.3, 0).applyMatrix4(boomG.matrix);
+    for (const dz of [-0.02, 0.02]) rod(new V3(top.x, top.y, top.z + dz), new V3(2.135, 1.1, dz), 0.007, std("#3b4f9a"), sheetG);
+  }
+
   // buda (sprayhood)
   function hoodPart(u0, u1, mat) {
     const nu = 10, nv = 16, pos = [], idx = [];
@@ -479,15 +616,26 @@
   for (const s of [1, -1]) {
     const xs = [0.55, 1.9, 3.2, 4.6, 5.9, 7.05];
     xs.forEach((x) => rod(deckEdge(x, s), up(deckEdge(x, s), H1), S, M.steel));
-    for (const h of [H1, H2]) poly(xs.map((x) => up(deckEdge(x, s), h)), 0.006, M.steel);
+    for (const h of [H1, H2]) poly(xs.map((x) => up(deckEdge(x, s), h)), 0.008, M.rope);
+    tbox(0.1, 0.42, sheer(0.3) + H1 - 0.05, sheer(0.3) + H1 - 0.02, ...zs(s, 0.55, hb(0.3) - 0.1)); // siedzisko na koszu
   }
   // pulpit dziobowy
   {
     const a = deckEdge(7.05, 1), b = new V3(7.9, sheer(7.9), 0.14);
     poly([up(a, H1), up(b, H1), new V3(8.12, sheer(8.0) + H1, 0), up(new V3(b.x, b.y, -b.z), H1), up(new V3(a.x, a.y, -a.z), H1)], S, M.steel);
     for (const s of [1, -1]) rod(new V3(b.x, b.y, s * b.z), up(new V3(b.x, b.y, s * b.z), H1), S, M.steel);
-    box(7.98, 8.06, sheer(8) + H1 - 0.12, sheer(8) + H1 - 0.04, 0.03, 0.09, std("#2fa84f"));
-    box(7.98, 8.06, sheer(8) + H1 - 0.12, sheer(8) + H1 - 0.04, -0.09, -0.03, std("#d22"));
+    box(8.07, 8.15, sheer(8) + H1 - 0.11, sheer(8) + H1 - 0.03, 0, 0.045, std("#2fa84f", { emissive: "#1c6", emissiveIntensity: 0.3 }));
+    box(8.07, 8.15, sheer(8) + H1 - 0.11, sheer(8) + H1 - 0.03, -0.045, 0, std("#d22", { emissive: "#d22", emissiveIntensity: 0.3 }));
+    // okucie dziobowe z rolką, kotwica, bęben rolera
+    const yb = sheer(8);
+    box(7.7, 8.28, yb + 0.01, yb + 0.05, -0.06, 0.06, M.chrome);
+    disc(8.24, yb + 0.03, 0, 0.035, M.dark, 0.1, "z");
+    rod(new V3(8.22, yb + 0.05, 0), new V3(7.6, yb + 0.06, 0), 0.012, M.chrome);
+    rod(new V3(8.24, yb + 0.02, 0), new V3(8.42, yb - 0.3, 0), 0.02, M.chrome);
+    const fluke = add(new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.24, 4), M.chrome));
+    fluke.position.set(8.43, yb - 0.42, 0);
+    fluke.scale.z = 0.45;
+    disc(7.98, yb + 0.13, 0, 0.06, M.chrome, 0.12, "y");
   }
   // kosz rufowy
   {
@@ -568,7 +716,7 @@
     const h = Math.max(hb(x), 0.01);
     return sheer(x) + 0.04 * (1 - Math.pow(z / h, 2));
   };
-  const eyeH = () => (st.inside ? 1.3 : inCockpit(st.pos.x, st.pos.z) ? 1.4 : 1.65);
+  const eyeH = () => (st.inside ? 1.3 : inCockpit(st.pos.x, st.pos.z) ? 1.55 : 1.65);
   function tryMove(nx, nz) {
     const { x, z } = st.pos;
     if (st.inside) {
@@ -591,19 +739,29 @@
   }
 
   const STOPS = {
-    zewnatrz: { t: "Dookoła jachtu", d: "Przeciągnij, aby obracać jacht, kółkiem myszy lub dwoma palcami przybliżasz.", orbit: { theta: -1.1, phi: 0.18, r: 15 } },
-    gora: { t: "Z lotu ptaka", d: "Widok z góry – jak na zdjęciu z drona w marinie.", orbit: { theta: -0.9, phi: 1.25, r: 15 } },
-    kokpit: { t: "Kokpit", d: "Stoisz przy rumplu. Przed Tobą buda i zejściówka do kabiny – idź prosto, żeby zejść do mesy.", walk: [0.7, 0, 0], yaw: 0, pitch: -0.1 },
-    mesa: { t: "Mesa", d: "Wnętrze z mahoniowym stołem, kojami po bokach, kambuzem i stolikiem nawigacyjnym. Dalej koja dziobowa.", walk: [2.6, 0, 0], yaw: 0, pitch: -0.25, inside: true },
-    dziob: { t: "Dziób", d: "Pokład dziobowy z teakiem i lukiem. Za Tobą maszt, nadbudówka i kokpit.", walk: [7.0, 0, 0], yaw: Math.PI, pitch: -0.08 },
+    zewnatrz: { t: "Dookoła jachtu", d: "Przeciągnij, aby obracać jacht, kółkiem myszy lub dwoma palcami przybliżasz.", orbit: { theta: -1.1, phi: 0.18, r: 15 }, photo: "zdjecia/wieczorem-przy-kei.jpg" },
+    gora: { t: "Z lotu ptaka", d: "Widok z góry – jak na zdjęciu z drona w marinie.", orbit: { theta: -0.9, phi: 1.25, r: 15 }, photo: "zdjecia/marina-z-gory.jpg" },
+    kokpit: { t: "Kokpit", d: "Jak na zdjęciu z rejsu: mahoniowa zejściówka, szyna szotu grota, panel silnika Volvo Penta, kompas i wyświetlacze, echosonda z niebieską kieszenią, ploter pod budą. Idź prosto, żeby zejść do mesy.", walk: [0.5, 0, 0.2], yaw: -0.08, pitch: -0.32, photo: "zdjecia/pod-zaglami.jpg" },
+    mesa: { t: "Mesa", d: "Mahoniowe wnętrze: stół, koje z oparciami, szafki z otworami, okna w mahoniowych ramach, kambuz i stolik nawigacyjny. Dalej koja dziobowa.", walk: [2.6, 0, 0], yaw: 0, pitch: -0.25, inside: true, photo: "zdjecia/mesa.jpg" },
+    dziob: { t: "Dziób", d: "Teak ułożony w V z białym klinem, luk z kratką, knagi, kotwica na rolce, bęben rolera genui i lampa dwukolorowa na pulpicie.", walk: [7.35, 0, -0.24], yaw: Math.PI - 0.22, pitch: -0.55, photo: "zdjecia/pomost-dziob.jpg" },
   };
   const titleEl = document.getElementById("s3dTitle"), textEl = document.getElementById("s3dText");
   const dpad = document.getElementById("dpad");
+  const photoEl = document.getElementById("s3dPhoto");
+  photoEl.addEventListener("click", () => {
+    const lb = document.getElementById("lightbox");
+    if (!lb) return;
+    document.getElementById("lightboxImg").src = photoEl.src;
+    document.getElementById("lightboxCaption").textContent = "Prawdziwe zdjęcie – " + titleEl.textContent;
+    lb.hidden = false;
+  });
   function goStop(key) {
     const s = STOPS[key];
     document.querySelectorAll("[data-stop]").forEach((b) => b.classList.toggle("active", b.dataset.stop === key));
     titleEl.textContent = s.t;
     textEl.textContent = s.d;
+    photoEl.hidden = !s.photo;
+    if (s.photo) { photoEl.src = s.photo; photoEl.alt = "Zdjęcie: " + s.t; }
     if (s.orbit) {
       st.mode = "orbit";
       Object.assign(st, s.orbit);
@@ -629,6 +787,7 @@
     mainsail.visible = on;
     flaked.visible = !on;
     boomG.rotation.y = on ? -0.42 : 0;
+    rigSheet();
     sailsBtn.textContent = on ? "⚓ Zrzuć żagle" : "⛵ Postaw żagle";
     wakeUp();
   }
