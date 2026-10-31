@@ -116,3 +116,53 @@ footer { text-align: center; padding: 2rem; background: var(--navy); color: var(
   .log { font-size: .85rem; }
 }
 .caption-input { padding: .6rem; border: 1px solid #c8d3dd; border-radius: 8px; font-size: .95rem; margin-right: .5rem; min-width: 240px; }
+
+/* ---------- Zdjęcie w nagłówku ---------- */
+.hero { padding-bottom: 3rem; }
+.hero-photo { margin: 0; justify-self: center; max-width: 380px; transform: rotate(2deg); }
+.hero-photo img { width: 100%; display: block; border-radius: 16px; border: 6px solid #fff; box-shadow: 0 20px 40px rgba(0,0,0,.4); }
+.badges { margin-bottom: 1rem; }
+
+/* ---------- Wizualizacja ---------- */
+.sub { color: #5b6b7b; margin-top: -.4rem; }
+.viz-controls { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.btn.toggle { background: #dfe7ef; color: var(--navy); }
+.btn.toggle.active { background: var(--sea); color: #fff; }
+.btn.ghost { background: transparent; color: var(--sea); border: 2px solid var(--sea); }
+.viz-wrap { background: var(--card); border-radius: 18px; overflow: hidden; box-shadow: 0 6px 24px rgba(11,34,57,.12); }
+.viz { display: block; width: 100%; height: auto; }
+.viz-info { padding: 1rem 1.3rem; display: flex; flex-direction: column; gap: .2rem; border-top: 1px solid #edf1f5; min-height: 4.5rem; }
+.viz-info b { color: var(--navy); }
+
+.boat-name { font: italic 700 25px Georgia, "Times New Roman", serif; fill: #1a3570; }
+.boat-reg { font: 600 14px system-ui, sans-serif; fill: #2b2b2b; letter-spacing: .05em; }
+
+#boatAbove, .underwater { animation: boatBob 5s ease-in-out infinite; transform-origin: 420px 465px; }
+@keyframes boatBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+
+.cloud { animation: drift 60s linear infinite; }
+.cloud.c2 { animation-duration: 90s; }
+.cloud.c3 { animation-duration: 75s; }
+@keyframes drift { from { transform: translateX(-60px); } to { transform: translateX(60px); } }
+.flag { animation: flag 1.6s ease-in-out infinite alternate; transform-origin: 712px 331px; transform-box: view-box; }
+@keyframes flag { from { transform: skewY(-4deg) scaleX(.95); } to { transform: skewY(4deg) scaleX(1); } }
+.ripples line { animation: ripple 4s ease-in-out infinite alternate; }
+@keyframes ripple { to { transform: translateX(30px); } }
+
+.sail { fill: #fbfbf8; stroke: #cfd6dc; stroke-width: 1.5; opacity: 0; transition: opacity .8s; }
+.furled, .lazybag { transition: opacity .8s; }
+.wake { opacity: 0; transition: opacity .8s; }
+.viz.sailing .sail { opacity: 1; }
+.viz.sailing .furled { opacity: 0; }
+.viz.sailing .lazybag { opacity: .55; }
+.viz.sailing .wake { opacity: .7; animation: wake 1.5s linear infinite; }
+@keyframes wake { from { transform: translateX(0); } to { transform: translateX(25px); } }
+
+.hotspot { cursor: pointer; }
+.hotspot circle { fill: var(--accent); stroke: #fff; stroke-width: 2; }
+.hotspot .pulse { fill: rgba(224,165,38,.35); stroke: none; animation: pulse 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.hotspot.active circle:not(.pulse) { fill: var(--red); }
+@keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+#hotspots.hidden { display: none; }
+
+@media (max-width: 780px) { .hero-photo { max-width: 280px; } }

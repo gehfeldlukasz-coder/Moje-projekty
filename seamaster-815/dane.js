@@ -3,7 +3,8 @@
 //  do swojego egzemplarza (nazwa, port, silnik, wyposażenie…)
 // ============================================================
 const JACHT = {
-  nazwa: "Seamaster 815",          // ← wpisz nazwę swojego jachtu
+  nazwa: "Tatulator",
+  rejestracja: "PL00016R",         // ← sprawdź z dokumentami
   typ: "Seamaster 815",
   portMacierzysty: "uzupełnij",     // np. "Gdynia, Marina Yacht Park"
   rokBudowy: "uzupełnij",           // np. 1978
@@ -23,7 +24,7 @@ const JACHT = {
     { etykieta: "Ożaglowanie", wartosc: "slup", ikona: "⛵" },
     { etykieta: "Kil", wartosc: "płetwowy", ikona: "▼" },
     { etykieta: "Kadłub", wartosc: "laminat (GRP)", ikona: "◆" },
-    { etykieta: "Silnik", wartosc: "uzupełnij", ikona: "⚙" },
+    { etykieta: "Silnik", wartosc: "zaburtowy", ikona: "⚙" },
     { etykieta: "Koje", wartosc: "uzupełnij", ikona: "☾" },
   ],
 
@@ -31,23 +32,40 @@ const JACHT = {
     { rok: "1975", tekst: "Projekt jachtu powstaje w biurze Holman & Pye." },
     { rok: "1976", tekst: "Start produkcji seryjnej Seamaster 815." },
     { rok: "1981", tekst: "Koniec produkcji – powstało ok. 136 egzemplarzy." },
-    { rok: "dziś", tekst: "Jacht pływa pod moją banderą. ⚓" },
+    { rok: "dziś", tekst: "Jako „Tatulator” pływa pod polską banderą. ⚓" },
   ],
 
   wyposazenie: [
-    "Grot i fok/genua",
-    "Silnik stacjonarny",
-    "Kompas",
-    "Echosonda / log",
-    "Radio VHF",
-    "Kambuz z kuchenką",
-    "Kotwica z łańcuchem",
-    "Kamizelki i koło ratunkowe",
+    "Genua na rolerze (z pasem UV)",
+    "Grot w lazy bagu",
+    "Buda (sprayhood)",
+    "Pokład z okładziną typu teak",
+    "Silnik zaburtowy",
+    "Pulpit dziobowy, kosz rufowy i relingi",
+    "Luk dziobowy",
+    "Antena i wiatrowskaz na topie masztu",
+    "Koło ratunkowe",
+    "Bandera PL na rufie",
   ],
+
+  // Opisy punktów na interaktywnej wizualizacji
+  elementy: {
+    maszt: "Maszt z jednym piętrem salingów, na topie antena i wiatrowskaz.",
+    genua: "Genua zwinięta na rolerze sztagu – niebieski pas chroni żagiel przed słońcem.",
+    lazybag: "Grot złożony w niebieskim lazy bagu na bomie.",
+    buda: "Niebieska buda (sprayhood) z przezroczystym oknem chroni zejściówkę i kokpit.",
+    poklad: "Pokład z brązową okładziną typu teak na dziobie i przy nadbudówce.",
+    kadlub: "Biały kadłub z laminatu z podwójnym brązowym pasem wzdłuż burty.",
+    rufa: "Rufa: kosz rufowy, koło ratunkowe, bandera i silnik zaburtowy.",
+    kil: "Kil płetwowy – zanurzenie ok. 1,37 m.",
+  },
 
   // Zdjęcia: wrzuć pliki do folderu "zdjecia/" i dopisz je tutaj.
   // Zdjęcia możesz też dodawać bezpośrednio w aplikacji (zapisują się w przeglądarce).
   zdjecia: [
-    // { plik: "zdjecia/jacht1.jpg", podpis: "Na żaglach" },
+    { plik: "zdjecia/tatulator-burta.jpg", podpis: "Tatulator przy kei w słońcu" },
+    { plik: "zdjecia/szczecin-mcn.jpg", podpis: "Szczecin – przy Morskim Centrum Nauki" },
+    { plik: "zdjecia/marina-poklad.jpg", podpis: "W marinie – widok na pokład" },
+    { plik: "zdjecia/w-boksie.jpg", podpis: "W boksie obok Skorpiosa" },
   ],
 };

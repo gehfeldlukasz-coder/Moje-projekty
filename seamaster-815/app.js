@@ -7,7 +7,7 @@ const esc = (s) =>
 document.querySelectorAll("[data-bind]").forEach((el) => {
   el.textContent = JACHT[el.dataset.bind] ?? "";
 });
-document.title = `${JACHT.nazwa} – mój jacht`;
+document.title = `${JACHT.nazwa} – ${JACHT.typ}`;
 
 // ---------- Dane techniczne ----------
 $("#specs").innerHTML = JACHT.specyfikacja
@@ -162,3 +162,42 @@ $("#logBody").addEventListener("click", (e) => {
 });
 
 renderLog();
+
+// ---------- Interaktywna wizualizacja ----------
+const NAZWY_ELEMENTOW = {
+  maszt: "Maszt i olinowanie",
+  genua: "Genua na rolerze",
+  lazybag: "Grot w lazy bagu",
+  buda: "Buda (sprayhood)",
+  poklad: "Pokład",
+  kadlub: "Kadłub",
+  rufa: "Rufa",
+  kil: "Kil",
+};
+document.querySelectorAll(".viz-controls .toggle").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".viz-controls .toggle").forEach((b) => b.classList.toggle("active", b === btn));
+    const sail = btn.dataset.mode === "sail";
+    $("#viz").classList.toggle("sailing", sail);
+    $("#viz").classList.toggle("port", !sail);
+    // style inline, żeby zmiana objęła też odbicie w wodzie (<use>)
+    const op = { ".sail": sail ? 1 : 0, ".furled": sail ? 0 : 1, ".lazybag": sail ? 0.55 : 1, ".wake": sail ? 0.7 : 0 };
+    for (const [sel, v] of Object.entries(op)) document.querySelectorAll(`#boatAbove ${sel}`).forEach((el) => (el.style.opacity = v));
+    $("#vizTitle").textContent = sail ? "Na żaglach" : "W porcie";
+    $("#vizText").textContent = sail
+      ? "Grot postawiony, genua rozwinięta z rolera – Tatulator idzie pełnym kursem."
+      : "Żagle zrzucone: genua zwinięta na rolerze, grot schowany w lazy bagu.";
+  })
+);
+$("#hotspotToggle").addEventListener("click", (e) => {
+  const hidden = $("#hotspots").classList.toggle("hidden");
+  e.target.textContent = hidden ? "Pokaż punkty" : "Ukryj punkty";
+});
+document.querySelectorAll(".hotspot").forEach((h) =>
+  h.addEventListener("click", () => {
+    document.querySelectorAll(".hotspot").forEach((x) => x.classList.toggle("active", x === h));
+    const key = h.dataset.key;
+    $("#vizTitle").textContent = NAZWY_ELEMENTOW[key] || key;
+    $("#vizText").textContent = (JACHT.elementy || {})[key] || "";
+  })
+);
