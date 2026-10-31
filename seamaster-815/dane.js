@@ -76,6 +76,10 @@ const JACHT = {
   // Zdjęcia: wrzuć pliki do folderu "zdjecia/" i dopisz je tutaj.
   // Zdjęcia możesz też dodawać bezpośrednio w aplikacji (zapisują się w przeglądarce).
   zdjecia: [
+    { plik: "zdjecia/wieczorem-przy-kei.jpg", podpis: "Wieczorem przy kei" },
+    { plik: "zdjecia/marina-slonce.jpg", podpis: "Tatulator w słonecznej marinie" },
+    { plik: "zdjecia/grot-w-porcie.jpg", podpis: "Grot postawiony w porcie" },
+    { plik: "zdjecia/pomost-dziob.jpg", podpis: "Przy pomoście – pokład dziobowy z teakiem" },
     { plik: "zdjecia/tatulator-burta.jpg", podpis: "Tatulator przy kei w słońcu" },
     { plik: "zdjecia/szczecin-mcn.jpg", podpis: "Szczecin – przy Morskim Centrum Nauki" },
     { plik: "zdjecia/marina-poklad.jpg", podpis: "W marinie – widok na pokład" },
