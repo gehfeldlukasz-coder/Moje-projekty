@@ -172,6 +172,7 @@ const NAZWY_ELEMENTOW = {
   poklad: "Pokład",
   kadlub: "Kadłub",
   rufa: "Rufa",
+  ster: "Ster",
   kil: "Kil",
 };
 document.querySelectorAll(".viz-controls .toggle").forEach((btn) =>
