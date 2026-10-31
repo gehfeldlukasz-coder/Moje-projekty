@@ -97,10 +97,56 @@
   const boat = new THREE.Group();
   scene.add(boat);
   const add = (obj, parent = boat) => (parent.add(obj), obj);
-  function box(x0, x1, y0, y1, z0, z1, mat, parent) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), mat);
+  // prostopadłościan z zaokrąglonymi krawędziami (zamiast „klocków”)
+  function roundRectShape(w, h, r) {
+    const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+    r = Math.min(r, w / 2, h / 2);
+    s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+    s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+    s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+    return s;
+  }
+  function rboxGeom(w, h, d, r) {
+    r = Math.max(0.0008, Math.min(r, w / 2.2, h / 2.2, d / 2.2));
+    const g = new THREE.ExtrudeGeometry(roundRectShape(Math.max(0.001, w - 2 * r), Math.max(0.001, h - 2 * r), r * 0.6), {
+      depth: Math.max(0.0005, d - 2 * r), bevelEnabled: true, bevelSize: r, bevelThickness: r, bevelSegments: 3, curveSegments: 4,
+    });
+    g.translate(0, 0, -Math.max(0.0005, d - 2 * r) / 2);
+    g.computeVertexNormals();
+    return g;
+  }
+  function rbox(x0, x1, y0, y1, z0, z1, mat, r, parent) {
+    const m = new THREE.Mesh(rboxGeom(x1 - x0, y1 - y0, z1 - z0, r), mat);
     m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
     return add(m, parent);
+  }
+  const box = (x0, x1, y0, y1, z0, z1, mat, parent) => rbox(x0, x1, y0, y1, z0, z1, mat, 0.022, parent);
+  // gładki „wałek” o zmiennym promieniu (np. zwinięta genua, bom)
+  function rod2(a, b, r0, r1, mat, parent, sz = 1) {
+    const dir = new V3().subVectors(b, a);
+    const g = new THREE.CylinderGeometry(r1, r0, dir.length(), 20);
+    if (sz !== 1) g.scale(1, 1, sz);
+    const m = new THREE.Mesh(g, mat);
+    m.position.copy(a).addScaledVector(dir, 0.5);
+    m.quaternion.setFromUnitVectors(new V3(0, 1, 0), dir.normalize());
+    return add(m, parent);
+  }
+  // wygładzanie narożników wielokąta 2D
+  function roundPts(pts, r, seg = 5) {
+    const out = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], a = pts[(i - 1 + pts.length) % pts.length], c = pts[(i + 1) % pts.length];
+      const da = Math.hypot(a[0] - p[0], a[1] - p[1]), dc = Math.hypot(c[0] - p[0], c[1] - p[1]);
+      const ra = Math.min(r, da / 2.5), rc = Math.min(r, dc / 2.5);
+      const s0 = [p[0] + ((a[0] - p[0]) * ra) / da, p[1] + ((a[1] - p[1]) * ra) / da];
+      const s1 = [p[0] + ((c[0] - p[0]) * rc) / dc, p[1] + ((c[1] - p[1]) * rc) / dc];
+      for (let k = 0; k <= seg; k++) {
+        const t = k / seg, q = 1 - t;
+        out.push([q * q * s0[0] + 2 * q * t * p[0] + t * t * s1[0], q * q * s0[1] + 2 * q * t * p[1] + t * t * s1[1]]);
+      }
+    }
+    return out;
   }
   function rod(a, b, r, mat, parent) {
     const dir = new V3().subVectors(b, a);
@@ -358,12 +404,20 @@
   box(2.02, 2.035, 0.72, 0.75, -0.02, 0.02, M.chrome); // stacyjka
 
   // ---------- nadbudówka ----------
+  const RE = ROOF - 0.045; // górna krawędź ściany bocznej (niżej – zaokrąglenie przechodzi w dach)
+  // profil dachu w poprzek: v∈[-1,1] → [y, z] z zaokrągloną krawędzią
+  const roofProfile = (x, v) => {
+    const av = Math.abs(v), sg = Math.sign(v) || 1, zc = cabZ(x, ROOF);
+    if (av <= 0.82) return [ROOF + 0.05 * (1 - v * v), v * zc];
+    const t = (av - 0.82) / 0.18, yA = ROOF + 0.05 * (1 - 0.82 * 0.82), zA = 0.82 * zc, zE = cabZ(x, RE);
+    return [yA + (RE - yA) * (1 - Math.cos((t * Math.PI) / 2)), sg * (zA + (zE - zA) * Math.sin((t * Math.PI) / 2))];
+  };
   const windows = [
-    [[2.75, 1.33], [4.05, 1.33], [3.95, 1.5], [2.75, 1.5]],
-    [[4.3, 1.34], [4.85, 1.34], [4.75, 1.48], [4.3, 1.48]],
+    roundPts([[2.75, 1.32], [4.05, 1.32], [3.94, 1.49], [2.78, 1.49]], 0.045),
+    roundPts([[4.3, 1.33], [4.86, 1.33], [4.76, 1.47], [4.32, 1.47]], 0.035),
   ];
   for (const side of [1, -1]) {
-    const shape = shapeOf([[2.25, sheer(2.25) - 0.02], [5.8, sheer(5.8) - 0.02], [5.0, ROOF], [2.25, ROOF]]);
+    const shape = shapeOf([[2.25, sheer(2.25) - 0.02], [5.8, sheer(5.8) - 0.02], [5.0, RE], [2.25, RE]]);
     windows.forEach((w) => shape.holes.push(pathOf(w)));
     const map = (u, v) => new V3(u, v, side * cabZ(u, v));
     const g = orient(mappedShape(shape, map), () => new V3(0, 0, side));
@@ -378,11 +432,11 @@
   }
   // dach
   {
-    const nu = 14, nv = 10, pos = [], idx = [];
+    const nu = 14, nv = 24, pos = [], idx = [];
     for (let i = 0; i <= nu; i++)
       for (let j = 0; j <= nv; j++) {
-        const x = 2.25 + (2.75 * i) / nu, v = -1 + (2 * j) / nv;
-        pos.push(x, ROOF + 0.05 * (1 - v * v), v * cabZ(x, ROOF));
+        const x = 2.25 + (2.75 * i) / nu, v = -1 + (2 * j) / nv, [y, z] = roofProfile(x, v);
+        pos.push(x, y, z);
       }
     for (let i = 0; i < nu; i++)
       for (let j = 0; j < nv; j++) {
@@ -396,12 +450,13 @@
   }
   // pochylony przód nadbudówki
   {
-    const nu = 6, nv = 10, pos = [], idx = [], yb = sheer(5.8) - 0.02;
+    const nu = 8, nv = 24, pos = [], idx = [], yb = sheer(5.8) - 0.02;
     for (let i = 0; i <= nu; i++)
       for (let j = 0; j <= nv; j++) {
-        const w = i / nu, v = -1 + (2 * j) / nv;
-        const x = 5.0 + 0.8 * w, y = ROOF + (yb - ROOF) * w;
-        pos.push(x, y + 0.05 * (1 - v * v) * (1 - w), v * cabZ(x, y));
+        const w = i / nu, v = -1 + (2 * j) / nv, [yt, zt] = roofProfile(5.0, v);
+        // łagodne przejście dachu w pochylony przód
+        const ww = w * w * (3 - 2 * w) * 0.35 + w * 0.65;
+        pos.push(5.0 + 0.8 * w, yt + (yb - yt) * ww, zt + (v * cabZ(5.8, yb) - zt) * w);
       }
     for (let i = 0; i < nu; i++)
       for (let j = 0; j < nv; j++) {
@@ -416,9 +471,9 @@
   // tylna ściana z zejściówką
   {
     const s0 = sheer(2.25) - 0.02, top = [];
-    for (let k = 0; k <= 10; k++) { const v = 1 - k / 5; top.push([0.95 * v, ROOF + 0.05 * (1 - v * v)]); }
-    const shape = shapeOf([[-0.9, CF - 0.04], [0.9, CF - 0.04], [0.9, s0], [1.0, s0], ...top, [-1.0, s0], [-0.9, s0]]);
-    shape.holes.push(pathOf([[-0.3, 1.03], [0.3, 1.03], [0.3, 1.56], [-0.3, 1.56]]));
+    for (let k = 0; k <= 24; k++) { const [y, z] = roofProfile(2.25, 1 - k / 12); top.push([z, y]); }
+    const shape = shapeOf([[-0.9, CF - 0.04], [0.9, CF - 0.04], [0.9, s0], [cabZ(2.25, s0), s0], ...top, [-cabZ(2.25, s0), s0], [-0.9, s0]]);
+    shape.holes.push(pathOf(roundPts([[-0.3, 1.03], [0.3, 1.03], [0.3, 1.56], [-0.3, 1.56]], 0.04)));
     const g = orient(mappedShape(shape, (u, v) => new V3(2.25, v, u)), () => new V3(-1, 0, 0));
     twoSided(g, M.white, M.mahoganyIn);
   }
@@ -447,7 +502,12 @@
   // teak i poręcze na dachu
   tbox(3.2, 4.25, ROOF + 0.045, ROOF + 0.06, -0.42, 0.42);
   for (const s of [1, -1]) {
-    box(2.7, 4.9, ROOF + 0.06, ROOF + 0.1, s * 0.62 - 0.025, s * 0.62 + 0.025, M.teakDark);
+    const yr = (x) => roofProfile(x, (s * 0.62) / cabZ(x, ROOF))[0];
+    rbox(2.7, 4.9, yr(3.8) + 0.075, yr(3.8) + 0.11, s * 0.62 - 0.02, s * 0.62 + 0.02, M.teakDark, 0.016);
+    for (let k = 0; k <= 5; k++) {
+      const x = 2.75 + k * 0.42;
+      rbox(x - 0.035, x + 0.035, yr(x) + 0.006, yr(3.8) + 0.08, s * 0.62 - 0.018, s * 0.62 + 0.018, M.teakDark, 0.012);
+    }
   }
 
   // ---------- wnętrze ----------
@@ -461,7 +521,8 @@
     box(4.93, 4.97, 0.15, sheer(4.95) - 0.02, ...z(0.42, 0.98), M.mahogany);
     box(4.93, 4.97, sheer(4.95) - 0.02, ROOF, ...z(0.42, cabBase(4.95) - 0.04), M.mahogany);
   }
-  box(3.1, 4.3, 0.78, 0.82, -0.36, 0.36, M.mahogany);
+  rbox(3.1, 4.3, 0.78, 0.82, -0.36, 0.36, M.mahogany, 0.04);
+  for (const z of [-0.35, 0.35]) rbox(3.12, 4.28, 0.82, 0.845, z - 0.012, z + 0.012, M.mahogany, 0.01);
   box(3.65, 3.75, 0.15, 0.78, -0.05, 0.05, M.steel);
   box(2.3, 2.75, 0.15, 0.95, -1.0, -0.45, M.mahogany); // kambuz
   box(2.42, 2.66, 0.95, 0.96, -0.85, -0.58, M.steel);
@@ -492,15 +553,28 @@
     rBot.translate(0, 0, -0.03);
     add(new THREE.Mesh(rTop, M.white));
     add(new THREE.Mesh(rBot, M.anti));
-    rod(new V3(-0.06, 1.0, 0), new V3(1.2, 1.12, 0), 0.03, M.teakDark); // rumpel
+    { // rumpel – wygięty, zwężający się ku końcowi
+      const curve = new THREE.CatmullRomCurve3([new V3(-0.08, 0.98, 0), new V3(0.25, 1.1, 0), new V3(0.8, 1.13, 0), new V3(1.25, 1.1, 0)]);
+      const g = new THREE.TubeGeometry(curve, 40, 0.032, 10, false);
+      const p = g.attributes.position;
+      for (let i = 0; i < p.count; i++) { // zwężenie
+        const t = clamp((p.getX(i) + 0.08) / 1.33, 0, 1), c = curve.getPoint(t), k = 1 - 0.45 * t;
+        p.setXYZ(i, c.x + (p.getX(i) - c.x) * k, c.y + (p.getY(i) - c.y) * k, c.z + (p.getZ(i) - c.z) * k);
+      }
+      g.computeVertexNormals();
+      add(new THREE.Mesh(g, M.mahogany));
+      disc(1.25, 1.1, 0, 0.022, M.black, 0.03, "x");
+    }
   }
 
   // ---------- silnik zaburtowy ----------
   box(-0.1, 0.0, 0.75, 0.95, 0.6, 0.9, M.dark); // wspornik
-  box(-0.45, -0.1, 0.85, 1.3, 0.6, 0.9, M.black);
-  box(-0.44, -0.11, 1.22, 1.3, 0.61, 0.89, std("#3a4148"));
-  box(-0.32, -0.24, -0.4, 0.85, 0.71, 0.79, M.black);
-  box(-0.42, -0.14, -0.2, -0.17, 0.68, 0.82, M.black);
+  rbox(-0.48, -0.1, 0.86, 1.32, 0.6, 0.9, M.black, 0.1);
+  rbox(-0.47, -0.12, 1.2, 1.33, 0.62, 0.88, std("#30363c"), 0.06);
+  rbox(-0.47, -0.3, 1.0, 1.1, 0.599, 0.601, std("#c9ced2"), 0.002); // logo
+  rbox(-0.34, -0.22, -0.15, 0.88, 0.71, 0.79, M.black, 0.035);
+  rbox(-0.44, -0.12, -0.2, -0.16, 0.67, 0.83, M.black, 0.015);
+  rbox(-0.4, -0.18, -0.42, -0.15, 0.725, 0.775, M.black, 0.04);
   {
     const c = document.createElement("canvas");
     c.width = c.height = 256;
@@ -523,7 +597,10 @@
   }
 
   // ---------- olinowanie ----------
-  rod(new V3(MX, ROOF + 0.05, 0), new V3(MX, MAST_TOP, 0), 0.07, M.mast);
+  rod2(new V3(MX, ROOF + 0.05, 0), new V3(MX, MAST_TOP, 0), 0.075, 0.045, M.mast, boat, 0.68);
+  box(MX - 0.09, MX + 0.09, ROOF + 0.04, ROOF + 0.12, -0.08, 0.08, M.chrome); // stopa masztu
+  box(MX - 0.06, MX + 0.06, MAST_TOP - 0.05, MAST_TOP + 0.04, -0.05, 0.05, M.dark); // top
+  for (const y of [3.0, 3.3, 7.6]) disc(MX + 0.06, y, 0, 0.025, M.dark, 0.03); // bloczki / lampa
   rod(new V3(MX - 0.1, 7, -0.85), new V3(MX - 0.1, 7, 0.85), 0.025, M.dark);
   rod(new V3(MX, MAST_TOP, 0), new V3(MX, MAST_TOP + 0.6, 0), 0.008, M.dark); // antena
   const W = 0.009;
@@ -542,8 +619,8 @@
   // genua zwinięta na rolerze
   const furled = new THREE.Group();
   boat.add(furled);
-  rod(onStay(0.04), onStay(0.93), 0.07, M.blue, furled);
-  rod(onStay(0.04), onStay(0.1), 0.076, M.flagWhite, furled);
+  rod2(onStay(0.04), onStay(0.93), 0.085, 0.035, M.blue, furled);
+  rod2(onStay(0.04), onStay(0.1), 0.088, 0.083, M.flagWhite, furled);
 
   // żagle (postawione)
   function sailGeom(p0, p1, p2, belly, n = 12) {
@@ -571,11 +648,25 @@
   const boomG = new THREE.Group();
   boomG.position.set(MX, 0, 0);
   boat.add(boomG);
-  rod(new V3(-0.05, 2.35, 0), new V3(-3.1, 2.35, 0), 0.05, M.dark, boomG);
-  const lazy = box(-3.05, -0.1, 2.38, 2.72, -0.13, 0.13, M.blue, boomG);
-  const flaked = box(-0.4, -0.08, 2.7, 3.05, -0.1, 0.1, M.sail, boomG);
+  {
+    const g = new THREE.CylinderGeometry(0.055, 0.055, 3.05, 20);
+    g.scale(1, 1, 0.7);
+    g.rotateZ(Math.PI / 2);
+    const bm = new THREE.Mesh(g, M.dark);
+    bm.position.set(-1.58, 2.33, 0);
+    boomG.add(bm);
+    rbox(-3.18, -3.08, 2.27, 2.39, -0.05, 0.05, M.black, 0.03, boomG); // nok bomu
+    rbox(-0.12, 0.0, 2.28, 2.38, -0.05, 0.05, M.chrome, 0.02, boomG); // okucie przy maszcie
+  }
+  const lazy = rbox(-3.02, -0.12, 2.36, 2.7, -0.14, 0.14, M.blue, 0.11, boomG);
+  rbox(-2.0, -1.75, 2.62, 2.66, -0.145, 0.145, std("#c9ced2"), 0.01, boomG); // naszywka
+  const flaked = rbox(-0.42, -0.08, 2.62, 3.05, -0.1, 0.1, M.sail, 0.08, boomG);
   const mainsail = add(new THREE.Mesh(sailGeom(new V3(-0.08, 2.42, 0), new V3(-0.08, MAST_TOP - 0.25, 0), new V3(-3.0, 2.45, 0), new V3(0, 0, -0.45)), M.sail), boomG);
 
+  for (const s of [1, -1]) {
+    const top = new V3(MX - 0.02, 6.3, 0);
+    for (const x of [-0.9, -2.2]) rod(top.clone().sub(new V3(MX, 0, 0)), new V3(x, 2.62, s * 0.13), 0.004, M.wire, boomG);
+  }
   const sheetG = new THREE.Group();
   boat.add(sheetG);
   function rigSheet() {
@@ -585,14 +676,18 @@
     for (const dz of [-0.02, 0.02]) rod(new V3(top.x, top.y, top.z + dz), new V3(2.135, 1.1, dz), 0.007, std("#3b4f9a"), sheetG);
   }
 
-  // buda (sprayhood)
-  function hoodPart(u0, u1, mat) {
-    const nu = 10, nv = 16, pos = [], idx = [];
+  // buda (sprayhood): płachta z przezroczystymi oknami i pałąkami
+  const hoodPt = (u, th) => {
+    const h = 0.56 * (1 - THREE.MathUtils.smootherstep(u, 0.35, 1.02));
+    const c = Math.cos(th);
+    return new V3(2.05 + 0.97 * u, ROOF + 0.02 + h * Math.pow(Math.sin(th), 0.5), 0.93 * Math.sign(c) * Math.pow(Math.abs(c), 0.55));
+  };
+  function hoodPatch(u0, u1, t0, t1, mat) {
+    const nu = 12, nv = 14, pos = [], idx = [];
     for (let i = 0; i <= nu; i++)
       for (let j = 0; j <= nv; j++) {
-        const u = u0 + ((u1 - u0) * i) / nu, th = (Math.PI * j) / nv;
-        const h = 0.55 * (1 - THREE.MathUtils.smootherstep(u, 0.4, 1));
-        pos.push(2.05 + 0.95 * u, ROOF + h * Math.pow(Math.sin(th), 0.55), 0.92 * Math.sign(Math.cos(th)) * Math.pow(Math.abs(Math.cos(th)), 0.6));
+        const p = hoodPt(u0 + ((u1 - u0) * i) / nu, t0 + ((t1 - t0) * j) / nv);
+        pos.push(p.x, p.y, p.z);
       }
     for (let i = 0; i < nu; i++)
       for (let j = 0; j < nv; j++) {
@@ -605,9 +700,21 @@
     g.computeVertexNormals();
     add(new THREE.Mesh(g, mat));
   }
-  hoodPart(0, 0.5, M.blue);
-  hoodPart(0.5, 1, M.clear);
-  for (const s of [1, -1]) box(2.05, 2.25, sheer(2.1), ROOF, s * 0.92 - 0.01, s * 0.92 + 0.01, M.blue);
+  const P = Math.PI;
+  hoodPatch(0, 0.36, 0, P, M.blue); // tył płachty
+  hoodPatch(0.36, 1, 0, 0.1 * P, M.blue); // dolne pasy
+  hoodPatch(0.36, 1, 0.9 * P, P, M.blue);
+  hoodPatch(0.36, 0.48, 0.1 * P, 0.9 * P, M.blue); // pas między oknami
+  hoodPatch(0.48, 0.95, 0.1 * P, 0.9 * P, M.clear); // przednie okno
+  hoodPatch(0.95, 1, 0.1 * P, 0.9 * P, M.blue);
+  hoodPatch(0.12, 0.33, 0.12 * P, 0.3 * P, M.clear); // okna boczne
+  hoodPatch(0.12, 0.33, 0.7 * P, 0.88 * P, M.clear);
+  for (const u of [0.0, 0.36]) {
+    const pts = [];
+    for (let k = 0; k <= 24; k++) pts.push(hoodPt(u, (P * k) / 24));
+    add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.014, 8, false), std("#1d3f7a")));
+  }
+  for (const s of [1, -1]) rbox(2.05, 2.25, sheer(2.1), ROOF + 0.03, s * 0.93 - 0.012, s * 0.93 + 0.012, M.blue, 0.006);
 
   // ---------- relingi ----------
   const S = 0.016, H1 = 0.62, H2 = 0.32;
@@ -659,15 +766,53 @@
   flag.add(fw, fr);
 
   // odbijacze od strony pomostu
-  for (const x of [2.0, 3.6, 5.2]) {
-    const f = add(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.42, 14), M.white));
-    f.position.set(x, 0.55, hullZ(x, 0.55) + 0.1);
+  {
+    const prof = [];
+    for (let k = 0; k <= 16; k++) {
+      const t = k / 16, y = -0.22 + 0.44 * t;
+      prof.push(new THREE.Vector2(0.095 * Math.pow(Math.sin(Math.PI * t), 0.35) + 0.002, y));
+    }
+    const fg = new THREE.LatheGeometry(prof, 20);
+    for (const x of [2.0, 3.6, 5.2]) {
+      const z = hullZ(x, 0.55) + 0.1;
+      const f = add(new THREE.Mesh(fg, M.white));
+      f.position.set(x, 0.55, z);
+      rod(new V3(x, 0.78, z), new V3(x, sheer(x) + 0.05, hb(x) - 0.08), 0.006, M.rope);
+    }
+  }
+  // listwa odbojowa wzdłuż krawędzi pokładu
+  for (const s of [1, -1]) {
+    const pts = [];
+    for (let x = 0.02; x <= 8.05; x += 0.15) pts.push(new V3(x, sheer(x) + 0.012, s * (hb(x) + 0.004)));
+    add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 160, 0.016, 6, false), std("#e2e6ea")));
   }
 
   // ---------- otoczenie: woda, pomost, brzeg ----------
+  const waterNormal = (() => {
+    const N = 128, c = document.createElement("canvas");
+    c.width = c.height = N;
+    const g = c.getContext("2d"), img = g.createImageData(N, N), hgt = new Float32Array(N * N);
+    for (let y = 0; y < N; y++)
+      for (let x = 0; x < N; x++) {
+        const a = (2 * Math.PI * x) / N, b = (2 * Math.PI * y) / N;
+        hgt[y * N + x] = Math.sin(a * 3 + b) + 0.6 * Math.sin(a * 5 - b * 4) + 0.4 * Math.sin(a * 2 + b * 7) + 0.3 * Math.sin(a * 9 + b * 3);
+      }
+    for (let y = 0; y < N; y++)
+      for (let x = 0; x < N; x++) {
+        const dx = hgt[y * N + ((x + 1) % N)] - hgt[y * N + ((x - 1 + N) % N)];
+        const dy = hgt[((y + 1) % N) * N + x] - hgt[((y - 1 + N) % N) * N + x];
+        const v = new V3(-dx * 0.6, -dy * 0.6, 1).normalize(), i = (y * N + x) * 4;
+        img.data[i] = (v.x * 0.5 + 0.5) * 255; img.data[i + 1] = (v.y * 0.5 + 0.5) * 255; img.data[i + 2] = (v.z * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+      }
+    g.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(120, 120);
+    return t;
+  })();
   const water = new THREE.Mesh(
     new THREE.PlaneGeometry(600, 600),
-    new THREE.MeshLambertMaterial({ color: "#35607f", transparent: true, opacity: 0.86, depthWrite: false })
+    new THREE.MeshPhongMaterial({ color: "#2f5a78", specular: "#4a6478", shininess: 35, normalMap: waterNormal, normalScale: new THREE.Vector2(0.2, 0.2), transparent: true, opacity: 0.88, depthWrite: false })
   );
   water.rotation.x = -Math.PI / 2;
   scene.add(water);
@@ -679,7 +824,7 @@
     p.position.set(x, -0.2, 1.68);
     env.add(p);
   }
-  const grass = new THREE.Mesh(new THREE.PlaneGeometry(200, 60), std("#6b9450", { roughness: 1 }));
+  const grass = new THREE.Mesh(new THREE.PlaneGeometry(200, 60), std("#5f8a48", { roughness: 1 }));
   grass.rotation.x = -Math.PI / 2;
   grass.position.set(5, 0.42, 33);
   env.add(grass);
@@ -688,16 +833,44 @@
   env.add(shore);
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const treeMat = std("#3e6b3a", { roughness: 0.9 });
-  for (let i = 0; i < 40; i++) {
-    const t = new THREE.Mesh(new THREE.ConeGeometry(2 + rnd() * 2, 7 + rnd() * 6, 8), treeMat);
-    t.position.set(-40 + rnd() * 100, 4.5, 14 + rnd() * 40);
+  // drzewa liściaste (wierzby, olchy) – korony z kilku kul jak na zdjęciach z mariny
+  const leafMats = ["#4f7a3f", "#5d8a47", "#3f6a36", "#6b9152"].map((c) => std(c, { roughness: 1 }));
+  const trunkMat = std("#5a4a3a");
+  const leafGeo = new THREE.IcosahedronGeometry(1, 2);
+  function tree(x, z, h) {
+    const t = new THREE.Group();
+    const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * h * 0.1, 0.2 * h * 0.1, h * 0.55, 8), trunkMat);
+    tr.position.y = h * 0.27;
+    t.add(tr);
+    const n = 4 + Math.floor(rnd() * 4), mat = leafMats[Math.floor(rnd() * leafMats.length)];
+    for (let k = 0; k < n; k++) {
+      const b = new THREE.Mesh(leafGeo, mat), r = h * (0.18 + rnd() * 0.12);
+      b.scale.set(r, r * (0.8 + rnd() * 0.3), r);
+      b.position.set((rnd() - 0.5) * h * 0.35, h * (0.55 + rnd() * 0.3), (rnd() - 0.5) * h * 0.35);
+      t.add(b);
+    }
+    t.position.set(x, 0.42, z);
     env.add(t);
   }
-  for (let i = 0; i < 50; i++) {
-    const t = new THREE.Mesh(new THREE.SphereGeometry(3 + rnd() * 3, 8, 6), treeMat);
-    t.position.set(-150 + rnd() * 300, 3 + rnd() * 2, -96 - rnd() * 6);
-    env.add(t);
+  for (let i = 0; i < 45; i++) tree(-45 + rnd() * 110, 12 + rnd() * 45, 7 + rnd() * 8);
+  for (let i = 0; i < 70; i++) tree(-170 + rnd() * 340, -96 - rnd() * 8, 8 + rnd() * 9);
+  // trzciny przy drugim brzegu
+  {
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 64;
+    const g = c.getContext("2d");
+    for (let k = 0; k < 420; k++) {
+      const x = rnd() * 512, h = 25 + rnd() * 39;
+      g.strokeStyle = rnd() < 0.5 ? "#b6a46a" : "#8f9a5a";
+      g.lineWidth = 1 + rnd();
+      g.beginPath(); g.moveTo(x, 64); g.quadraticCurveTo(x + (rnd() - 0.5) * 6, 64 - h / 2, x + (rnd() - 0.5) * 10, 64 - h); g.stroke();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.repeat.set(30, 1);
+    const reeds = new THREE.Mesh(new THREE.PlaneGeometry(400, 2.4), new THREE.MeshLambertMaterial({ map: tex, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide }));
+    reeds.position.set(0, 1.1, -91.5);
+    env.add(reeds);
   }
 
   // ---------- sterowanie ----------
@@ -890,6 +1063,7 @@
       camera.lookAt(st.pos.x + Math.cos(st.pitch) * Math.cos(st.yaw), st.eyeY + Math.sin(st.pitch), st.pos.z + Math.cos(st.pitch) * Math.sin(st.yaw));
     }
     flag.rotation.y = Math.sin(t * 2.2) * 0.25;
+    waterNormal.offset.set(t * 0.01, t * 0.006);
     boat.position.y = Math.sin(t * 0.8) * 0.015;
     renderer.render(scene, camera);
     // animacja trwa, dopóki sekcja jest widoczna (flaga, kołysanie)
