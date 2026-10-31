@@ -47,7 +47,7 @@
         <button class="btn ghost" id="hotspotToggle">Ukryj punkty</button>
       </div>
       <div class="viz-wrap">
-        <svg id="viz" class="viz port" viewBox="50 0 800 820" role="img" aria-label="Wizualizacja jachtu Tatulator">
+        <svg id="viz" class="viz port" viewBox="0 0 640 820" role="img" aria-label="Wizualizacja jachtu Tatulator">
           <defs>
             <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stop-color="#3f74b8" /><stop offset=".8" stop-color="#a9c6e6" /><stop offset="1" stop-color="#d9e6f2" />
@@ -58,143 +58,144 @@
             <linearGradient id="hullShade" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stop-color="#ffffff" /><stop offset="1" stop-color="#e4e9ed" />
             </linearGradient>
-            <pattern id="teak" width="22" height="30" patternUnits="userSpaceOnUse">
-              <rect width="22" height="30" fill="#9b5a2c" /><rect x="18" width="4" height="30" fill="#5e3216" />
+            <pattern id="teak" width="10" height="14" patternUnits="userSpaceOnUse">
+              <rect width="10" height="14" fill="#9b5a2c" /><rect x="8" width="2" height="14" fill="#5e3216" />
             </pattern>
-            <!-- współrzędne kadłuba odrysowane ze zdjęcia z boku; linia wody: y = 820 -->
-            <clipPath id="belowWater"><rect x="-600" y="818" width="3500" height="1500" /></clipPath>
-            <clipPath id="aboveWater"><rect x="-600" y="-2000" width="3500" height="2821" /></clipPath>
-            <path id="hullPath" d="M160 555 C700 545 1300 505 1865 450 L1830 650 C1650 790 1300 840 1000 840 C700 840 450 800 290 755 L150 650 Z" />
+            <!-- proporcje wg rysunku technicznego Seamaster 815 (Yachtsnet); linia wody: y = 1730 -->
+            <clipPath id="aboveWater"><rect x="-400" y="0" width="1800" height="1731" /></clipPath>
+            <clipPath id="belowWater"><rect x="-400" y="1729" width="1800" height="400" /></clipPath>
+            <path id="hullPath" d="M50 1630 L865 1605 L780 1730 L45 1730 Z" />
           </defs>
 
           <!-- niebo i chmury -->
-          <rect width="900" height="820" fill="url(#sky)" />
+          <rect width="640" height="820" fill="url(#sky)" />
           <g fill="#fff" opacity=".85">
-            <g class="cloud c1"><ellipse cx="140" cy="120" rx="60" ry="18" /><ellipse cx="175" cy="106" rx="38" ry="20" /></g>
-            <g class="cloud c2"><ellipse cx="720" cy="180" rx="80" ry="22" /><ellipse cx="760" cy="162" rx="45" ry="24" /><ellipse cx="680" cy="168" rx="30" ry="16" /></g>
-            <g class="cloud c3"><ellipse cx="620" cy="60" rx="50" ry="12" /></g>
+            <g class="cloud c1"><ellipse cx="90" cy="110" rx="55" ry="16" /><ellipse cx="122" cy="96" rx="34" ry="18" /></g>
+            <g class="cloud c2"><ellipse cx="540" cy="190" rx="70" ry="20" /><ellipse cx="575" cy="172" rx="40" ry="22" /></g>
+            <g class="cloud c3"><ellipse cx="560" cy="60" rx="45" ry="11" /></g>
           </g>
 
           <!-- brzeg -->
-          <path d="M0 676 Q60 648 120 666 Q170 640 240 662 Q300 650 350 668 Q430 644 520 664 Q600 648 660 666 Q740 642 820 662 Q860 656 900 664 V700 H0 Z" fill="#3e5a37" />
-          <rect x="0" y="684" width="900" height="16" fill="#b39f63" />
+          <path d="M0 628 Q50 604 100 620 Q150 598 210 616 Q270 606 320 622 Q390 600 460 618 Q530 604 580 620 Q610 614 640 618 V650 H0 Z" fill="#3e5a37" />
+          <rect x="0" y="636" width="640" height="14" fill="#b39f63" />
 
-          <g transform="translate(153 478.6) scale(.27)">
-            <!-- część podwodna -->
+          <g transform="translate(87.5 -215) scale(.5)">
+            <!-- część podwodna: kadłub, kil płetwowy, ster -->
             <g class="underwater" clip-path="url(#belowWater)">
-              <use href="#hullPath" fill="#dfe5ea" />
-              <path d="M290 755 C420 905 1300 925 1830 650 Z" fill="#cfd7de" />
-              <path d="M870 835 L930 1110 L1065 1110 L1100 835 Z" fill="#3d4a57" />
-              <path d="M1835 640 L1870 650 L1855 820 L1830 960 L1735 960 L1760 820 L1800 700 Z" fill="#3d4a57" />
+              <path d="M45 1728 L782 1728 C700 1792 300 1798 50 1762 Z" fill="#5d6b78" />
+              <path d="M440 1775 L582 1775 L550 1868 L462 1868 Z" fill="#5d6b78" />
+              <path d="M28 1728 L72 1728 L66 1835 L34 1835 Z" fill="#5d6b78" />
             </g>
           </g>
 
           <!-- woda -->
-          <rect y="700" width="900" height="120" fill="url(#water)" opacity=".8" />
+          <rect y="650" width="640" height="170" fill="url(#water)" opacity=".72" />
 
-          <g transform="translate(153 478.6) scale(.27)">
+          <g transform="translate(87.5 -215) scale(.5)">
             <g id="boatAbove" clip-path="url(#aboveWater)">
               <!-- olinowanie -->
               <g class="ns" stroke="#7d8790" stroke-width="1.3" fill="none">
-                <line x1="996" y1="-1610" x2="215" y2="545" />
-                <line x1="1002" y1="-1610" x2="1790" y2="330" />
-                <polyline points="996,-1590 1100,-736 1040,520" />
-                <line x1="996" y1="-720" x2="960" y2="522" />
-                <line x1="1010" y1="-450" x2="1150" y2="140" /><line x1="1010" y1="-450" x2="1350" y2="148" /><line x1="1010" y1="-450" x2="1500" y2="156" />
+                <line x1="482" y1="530" x2="862" y2="1600" />
+                <line x1="476" y1="530" x2="62" y2="1625" />
+                <polyline points="479,545 535,1060 500,1620" />
+                <polyline points="479,545 430,1060 470,1620" />
+                <line x1="478" y1="1100" x2="420" y2="1462" /><line x1="478" y1="1100" x2="330" y2="1464" /><line x1="478" y1="1100" x2="250" y2="1466" />
+                <line x1="410" y1="1508" x2="488" y2="1578" />
               </g>
 
               <!-- żagle (tryb „na żaglach”) -->
-              <path class="sail mainsail" d="M1006 -1600 L1006 205 L1600 212 Q1470 -620 1006 -1600 Z" />
-              <path class="sail genoa" d="M215 545 L975 -1560 Q1090 -420 1215 480 Z" />
+              <path class="sail mainsail" d="M480 545 L489 1498 L210 1504 Q300 1000 480 545 Z" />
+              <path class="sail genoa" d="M846 1560 L487 562 Q565 1050 602 1515 Z" />
 
               <!-- genua zwinięta na rolerze -->
               <g class="furled">
-                <line x1="240" y1="440" x2="972" y2="-1560" stroke="#2a62b8" stroke-width="30" stroke-linecap="round" />
-                <line x1="240" y1="440" x2="272" y2="355" stroke="#f2f2f2" stroke-width="32" stroke-linecap="round" />
+                <line x1="838" y1="1556" x2="490" y2="572" stroke="#2a62b8" stroke-width="14" stroke-linecap="round" />
+                <line x1="838" y1="1556" x2="824" y2="1515" stroke="#f2f2f2" stroke-width="15" stroke-linecap="round" />
               </g>
 
-              <!-- maszt -->
-              <rect x="985" y="-1624" width="22" height="2020" fill="#a2abb3" />
-              <rect x="890" y="-742" width="210" height="10" fill="#59626b" />
-              <line class="ns" x1="996" y1="-1624" x2="996" y2="-1730" stroke="#333" stroke-width="1.5" />
-              <path d="M1000 -1640 L1060 -1665 L1048 -1640 Z" fill="#c33" />
+              <!-- maszt z salingiem -->
+              <path d="M474 525 L484 525 L502 1625 L492 1625 Z" fill="#a2abb3" />
+              <line x1="430" y1="1060" x2="535" y2="1060" stroke="#59626b" stroke-width="5" />
+              <line class="ns" x1="478" y1="525" x2="478" y2="478" stroke="#333" stroke-width="1.5" />
+              <path d="M476 512 L446 500 L452 512 Z" fill="#c33" />
 
               <!-- bom, grot w lazy bagu -->
-              <path d="M1005 50 L1070 70 L1075 200 L1010 195 Z" fill="#f1efe8" />
-              <path class="lazybag" d="M1070 132 L1540 156 Q1592 164 1592 205 L1590 214 L1070 204 Z" fill="#2459ad" />
-              <line x1="1000" y1="214" x2="1605" y2="222" stroke="#4a5058" stroke-width="18" stroke-linecap="round" />
+              <path d="M484 1440 L497 1440 L498 1462 L485 1462 Z" fill="#f1efe8" />
+              <path class="lazybag" d="M494 1460 L232 1466 Q206 1470 206 1488 L208 1498 L494 1498 Z" fill="#2459ad" />
+              <line x1="495" y1="1502" x2="205" y2="1507" stroke="#4a5058" stroke-width="8" stroke-linecap="round" />
 
               <!-- kadłub -->
-              <use href="#hullPath" fill="url(#hullShade)" stroke="#c9d2da" stroke-width="4" />
-              <path d="M290 755 C450 800 700 840 1000 840 C1300 840 1650 790 1830 650 L1833 636 C1650 776 1300 822 1000 822 C700 822 450 786 296 742 Z" fill="#1d2630" />
-              <path d="M155 602 Q1000 585 1870 478" stroke="#5a2318" stroke-width="14" fill="none" />
-              <path d="M160 552 C700 542 1300 502 1865 447" stroke="#d0d6dc" stroke-width="8" fill="none" />
-              <text x="480" y="695" class="boat-name" data-bind="nazwa"></text>
-              <text x="1560" y="600" class="boat-reg" data-bind="rejestracja" transform="rotate(-4 1560 600)"></text>
+              <use href="#hullPath" fill="url(#hullShade)" stroke="#c9d2da" stroke-width="2" />
+              <path d="M45 1720 L786 1720 L780 1730 L45 1730 Z" fill="#1d2630" />
+              <line x1="54" y1="1648" x2="852" y2="1624" stroke="#5a2318" stroke-width="6" />
+              <line x1="54" y1="1657" x2="846" y2="1633" stroke="#5a2318" stroke-width="2.5" />
+              <line x1="50" y1="1630" x2="865" y2="1605" stroke="#d0d6dc" stroke-width="4" />
+              <text x="690" y="1702" text-anchor="middle" class="boat-name" data-bind="nazwa"></text>
+              <text x="70" y="1696" class="boat-reg" data-bind="rejestracja"></text>
 
               <!-- nadbudówka -->
-              <path d="M700 468 L880 418 L1250 398 L1560 396 L1566 490 L1112 520 L985 515 L720 522 Z" fill="#f7f9fb" stroke="#d3dbe2" stroke-width="3" />
-              <path d="M700 468 L880 418 L1250 398 L1560 396 L1560 410 L1250 422 L880 446 Z" fill="#e1e8ee" />
-              <path d="M920 428 L1240 403 L1240 416 L925 442 Z" fill="url(#teak)" />
-              <path d="M985 466 L1105 452 L1105 492 L968 496 Z" fill="#1d2733" />
-              <path d="M1175 447 L1425 425 L1445 468 L1175 488 Z" fill="#1d2733" />
+              <path d="M270 1622 L270 1584 L545 1580 L632 1610 L632 1612 Z" fill="#f7f9fb" stroke="#d3dbe2" stroke-width="2" />
+              <path d="M270 1584 L545 1580 L632 1610 L545 1590 L270 1593 Z" fill="#e1e8ee" />
+              <path d="M300 1577 L520 1574 L520 1579 L300 1582 Z" fill="url(#teak)" />
+              <path d="M290 1600 L405 1598 L398 1614 L292 1615 Z" fill="#1d2733" />
+              <path d="M440 1598 L486 1597 L496 1612 L440 1613 Z" fill="#1d2733" />
 
               <!-- pokład z okładziną typu teak -->
-              <path d="M415 525 L985 512 L985 545 L420 550 Z" fill="url(#teak)" />
-              <path d="M1110 520 L1590 483 L1592 500 L1112 536 Z" fill="url(#teak)" />
+              <path d="M560 1614 L800 1607 L800 1612 L560 1619 Z" fill="url(#teak)" />
+              <path d="M130 1627 L268 1623 L268 1628 L130 1632 Z" fill="url(#teak)" />
 
               <!-- buda (sprayhood) -->
-              <path d="M1188 398 C1192 300 1210 245 1262 236 L1500 232 C1530 235 1542 262 1546 300 L1556 436 L1505 430 L1460 398 Z" fill="#2459ad" />
-              <path d="M1205 388 C1210 300 1226 258 1268 250 L1365 250 C1420 278 1450 330 1452 388 Z" fill="#a9c3d6" opacity=".85" />
-              <path d="M1225 370 C1230 310 1245 275 1275 265" class="ns" stroke="#eef5fa" stroke-width="2" fill="none" opacity=".8" />
+              <path d="M415 1584 C410 1548 392 1525 360 1522 L265 1520 C248 1522 242 1535 240 1550 L236 1624 L262 1622 L270 1584 Z" fill="#2459ad" />
+              <path d="M402 1580 C398 1552 384 1532 358 1530 L322 1530 C304 1546 296 1562 295 1580 Z" fill="#a9c3d6" opacity=".85" />
 
               <!-- pulpit, relingi, kosz rufowy -->
-              <g class="ns" stroke="#c8d0d7" stroke-width="2.2" fill="none" stroke-linecap="round">
-                <path d="M180 535 L105 380 L360 362 L385 522" />
-                <path d="M1555 312 L1790 316 L1800 440" />
-                <line x1="1600" y1="312" x2="1605" y2="495" />
-                <line x1="360" y1="362" x2="1555" y2="312" stroke-width="1.2" />
-                <line x1="375" y1="440" x2="1555" y2="398" stroke-width="1.2" />
-                <line x1="465" y1="548" x2="465" y2="358" /><line x1="705" y1="540" x2="705" y2="348" />
-                <line x1="855" y1="532" x2="855" y2="341" /><line x1="1280" y1="512" x2="1280" y2="324" />
+              <g class="ns" stroke="#c8d0d7" stroke-width="2" fill="none" stroke-linecap="round">
+                <path d="M800 1608 L812 1546 L872 1548 L862 1604" />
+                <path d="M150 1626 L150 1546 L62 1548 L58 1630" />
+                <line x1="150" y1="1546" x2="812" y2="1546" stroke-width="1.1" />
+                <line x1="150" y1="1580" x2="805" y2="1578" stroke-width="1.1" />
+                <line x1="270" y1="1622" x2="270" y2="1546" /><line x1="430" y1="1618" x2="430" y2="1546" />
+                <line x1="570" y1="1614" x2="570" y2="1546" /><line x1="690" y1="1611" x2="690" y2="1546" />
               </g>
-              <rect x="70" y="398" width="34" height="22" fill="#b33" />
+              <rect x="868" y="1556" width="12" height="8" fill="#b33" />
 
-              <!-- rufa: ster na pawęży, bandera, koło ratunkowe -->
-              <path d="M1842 470 L1864 476 L1840 650 L1820 650 Z" fill="#f3f5f7" stroke="#c9d2da" stroke-width="3" />
-              <line class="ns" x1="1806" y1="452" x2="1815" y2="212" stroke="#d9d9d9" stroke-width="2" />
+              <!-- rufa: ster na pawęży, silnik zaburtowy, bandera, koło ratunkowe -->
+              <path d="M30 1636 L56 1634 L60 1730 L32 1730 Z" fill="#f3f5f7" stroke="#c9d2da" stroke-width="2" />
+              <rect x="0" y="1596" width="26" height="36" rx="6" fill="#20252b" />
+              <rect x="10" y="1630" width="7" height="100" fill="#20252b" />
+              <line class="ns" x1="56" y1="1628" x2="30" y2="1520" stroke="#d9d9d9" stroke-width="2" />
               <g class="flag">
-                <path d="M1818 214 L1902 262 L1902 290 L1818 248 Z" fill="#fff" />
-                <path d="M1818 248 L1902 290 L1902 320 L1818 282 Z" fill="#dc143c" />
+                <path d="M30 1520 L-24 1532 L-24 1546 L30 1536 Z" fill="#fff" />
+                <path d="M30 1536 L-24 1546 L-24 1560 L30 1552 Z" fill="#dc143c" />
               </g>
-              <ellipse cx="1838" cy="385" rx="26" ry="68" fill="none" stroke="#f26a1b" stroke-width="20" />
+              <ellipse cx="96" cy="1584" rx="9" ry="22" fill="none" stroke="#f26a1b" stroke-width="7" />
 
               <!-- kilwater (na żaglach) -->
               <g class="wake ns" stroke="#fff" stroke-width="2" fill="none" opacity="0">
-                <path d="M1880 800 Q2000 790 2120 806" /><path d="M1930 812 Q2080 800 2260 818" />
+                <path d="M20 1736 Q-60 1730 -140 1740" /><path d="M-10 1746 Q-110 1738 -220 1750" />
               </g>
             </g>
           </g>
 
           <!-- odbicie w wodzie -->
-          <g transform="translate(0 1400) scale(1 -1)" opacity=".18">
-            <g transform="translate(153 478.6) scale(.27)"><use href="#boatAbove" /></g>
+          <g transform="translate(0 1300) scale(1 -1)" opacity=".18">
+            <g transform="translate(87.5 -215) scale(.5)"><use href="#boatAbove" /></g>
           </g>
           <g class="ripples" stroke="#9fc0dc" stroke-width="1.5" opacity=".5">
-            <line x1="40" y1="730" x2="120" y2="730" /><line x1="760" y1="750" x2="860" y2="750" /><line x1="230" y1="790" x2="330" y2="790" />
+            <line x1="30" y1="690" x2="100" y2="690" /><line x1="520" y1="720" x2="610" y2="720" /><line x1="180" y1="780" x2="270" y2="780" />
           </g>
 
           <!-- punkty informacyjne -->
           <g id="hotspots">
-            <g class="hotspot" data-key="maszt" transform="translate(422 290)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="genua" transform="translate(310 344)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="lazybag" transform="translate(512 523)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="buda" transform="translate(530 560)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="poklad" transform="translate(342 620)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="kadlub" transform="translate(420 662)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="rufa" transform="translate(675 565)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="ster" transform="translate(640 728)"><circle r="14" class="pulse" /><circle r="7" /></g>
-            <g class="hotspot" data-key="kil" transform="translate(423 760)"><circle r="14" class="pulse" /><circle r="7" /></g>
+            <g class="hotspot" data-key="maszt" transform="translate(332 285)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="genua" transform="translate(427 335)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="lazybag" transform="translate(262 524)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="buda" transform="translate(252 558)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="poklad" transform="translate(430 589)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="kadlub" transform="translate(300 625)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="rufa" transform="translate(133 578)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="ster" transform="translate(112 680)"><circle r="12" class="pulse" /><circle r="6" /></g>
+            <g class="hotspot" data-key="kil" transform="translate(340 700)"><circle r="12" class="pulse" /><circle r="6" /></g>
           </g>
         </svg>
         <div class="viz-info" id="vizInfo">

@@ -134,12 +134,12 @@ footer { text-align: center; padding: 2rem; background: var(--navy); color: var(
 .viz-info { padding: 1rem 1.3rem; display: flex; flex-direction: column; gap: .2rem; border-top: 1px solid #edf1f5; min-height: 4.5rem; }
 .viz-info b { color: var(--navy); }
 
-.boat-name { font: italic 700 72px Georgia, "Times New Roman", serif; fill: #1a3570; }
-.boat-reg { font: 600 40px system-ui, sans-serif; fill: #2b2b2b; letter-spacing: .05em; }
+.boat-name { font: italic 700 34px Georgia, "Times New Roman", serif; fill: #1a3570; }
+.boat-reg { font: 600 18px system-ui, sans-serif; fill: #2b2b2b; letter-spacing: .05em; }
 .ns, .ns * { vector-effect: non-scaling-stroke; }
 
 #boatAbove, .underwater { animation: boatBob 5s ease-in-out infinite; transform-origin: center; }
-@keyframes boatBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+@keyframes boatBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 
 .cloud { animation: drift 60s linear infinite; }
 .cloud.c2 { animation-duration: 90s; }
@@ -157,7 +157,7 @@ footer { text-align: center; padding: 2rem; background: var(--navy); color: var(
 .viz.sailing .furled { opacity: 0; }
 .viz.sailing .lazybag { opacity: .55; }
 .viz.sailing .wake { opacity: .7; animation: wake 1.5s linear infinite; }
-@keyframes wake { from { transform: translateX(0); } to { transform: translateX(90px); } }
+@keyframes wake { from { transform: translateX(0); } to { transform: translateX(-60px); } }
 
 .hotspot { cursor: pointer; }
 .hotspot circle { fill: var(--accent); stroke: #fff; stroke-width: 2; }
@@ -167,3 +167,4 @@ footer { text-align: center; padding: 2rem; background: var(--navy); color: var(
 #hotspots.hidden { display: none; }
 
 @media (max-width: 780px) { .hero-photo { max-width: 280px; } }
+.viz-wrap { max-width: 720px; margin: 0 auto; }
