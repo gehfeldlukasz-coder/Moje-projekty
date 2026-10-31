@@ -53,7 +53,8 @@ const JACHT = {
     "Kabestany (winsze) na zrębnicach",
     "Drewniane wykończenie kokpitu i siedziska",
     "Grot Apollo Sails",
-    "Ster zawieszany na pawęży",
+    "Ster zawieszany na pawęży z drewnianym rumplem",
+    "Platforma rufowa z okładziną typu teak",
     "Bandera PL na rufie",
   ],
 
@@ -78,6 +79,7 @@ const JACHT = {
     { plik: "zdjecia/marina-poklad.jpg", podpis: "W marinie – widok na pokład" },
     { plik: "zdjecia/w-boksie.jpg", podpis: "W boksie obok Skorpiosa" },
     { plik: "zdjecia/pod-zaglami.jpg", podpis: "Pod żaglami – widok z kokpitu" },
+    { plik: "zdjecia/marina-z-gory.jpg", podpis: "Z lotu ptaka w marinie – 26 lipca" },
     { plik: "zdjecia/transport.jpg", podpis: "Transport: Stepnica → Budzień, 17 października" },
   ],
 };
