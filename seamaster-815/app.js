@@ -202,3 +202,22 @@ document.querySelectorAll(".hotspot").forEach((h) =>
     $("#vizText").textContent = (JACHT.elementy || {})[key] || "";
   })
 );
+
+// ---------- Dźwięki jachtu ----------
+(() => {
+  const btn = $("#soundBtn"), audio = $("#ambient");
+  if (!btn || !audio) return;
+  audio.volume = 0.6;
+  const show = (on) => {
+    btn.classList.toggle("on", on);
+    btn.setAttribute("aria-pressed", on);
+    btn.textContent = on ? "🔇 Wycisz" : "🔊 Dźwięki jachtu";
+  };
+  btn.addEventListener("click", async () => {
+    if (audio.paused) {
+      try { await audio.play(); show(true); }
+      catch (e) { btn.textContent = "🔈 Dźwięk niedostępny"; }
+    } else { audio.pause(); show(false); }
+  });
+  audio.addEventListener("pause", () => show(false));
+})();
