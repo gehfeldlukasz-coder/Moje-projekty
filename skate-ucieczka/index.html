@@ -166,7 +166,8 @@ const OBS = {
 /* ======================= STAN GRY ======================= */
 let state = 'menu';   // menu | play | pause | caught | over
 let G = null;
-let best = +(localStorage.getItem('skateUcieczkaBest') || 0);
+let best = 0;
+try { best = +(localStorage.getItem('skateUcieczkaBest') || 0) || 0; } catch (e) {}
 let touchMode = false;
 const input = { down: false };
 
@@ -508,7 +509,7 @@ function updateCaught(dt) {
   if (G.overT > 2.2) {
     state = 'over'; G.overT = 0;
     const sc = score();
-    if (sc > best) { best = sc; localStorage.setItem('skateUcieczkaBest', best); G.newBest = true; }
+    if (sc > best) { best = sc; try { localStorage.setItem('skateUcieczkaBest', best); } catch (e) {} G.newBest = true; }
   }
 }
 
