@@ -81,10 +81,15 @@ async function renderGallery() {
 
 $("#photoInput").addEventListener("change", async (e) => {
   for (const file of e.target.files) {
-    const podpis = prompt(`Podpis dla zdjęcia „${file.name}” (opcjonalnie):`, "") || "";
-    await dbTx("readwrite", (s) => s.add({ blob: file, podpis }));
+    const podpis = $("#photoCaption").value.trim();
+    try {
+      await dbTx("readwrite", (s) => s.add({ blob: file, podpis }));
+    } catch (err) {
+      console.warn("Nie udało się zapisać zdjęcia", err);
+    }
   }
   e.target.value = "";
+  $("#photoCaption").value = "";
   renderGallery();
 });
 
@@ -92,10 +97,8 @@ $("#gallery").addEventListener("click", async (e) => {
   const del = e.target.closest(".del");
   if (del) {
     e.stopPropagation();
-    if (confirm("Usunąć to zdjęcie?")) {
-      await dbTx("readwrite", (s) => s.delete(Number(del.dataset.id)));
-      renderGallery();
-    }
+    await dbTx("readwrite", (s) => s.delete(Number(del.dataset.id)));
+    renderGallery();
     return;
   }
   const fig = e.target.closest("figure");
@@ -112,8 +115,14 @@ renderGallery();
 
 // ---------- Dziennik rejsów (localStorage) ----------
 const LOG_KEY = "seamaster815-dziennik";
-const loadLog = () => JSON.parse(localStorage.getItem(LOG_KEY) || "[]");
-const saveLog = (log) => localStorage.setItem(LOG_KEY, JSON.stringify(log));
+let memLog = [];
+const loadLog = () => {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch { return memLog; }
+};
+const saveLog = (log) => {
+  memLog = log;
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch {}
+};
 
 function renderLog() {
   const log = loadLog().sort((a, b) => b.data.localeCompare(a.data));
@@ -146,7 +155,7 @@ $("#logForm").addEventListener("submit", (e) => {
 
 $("#logBody").addEventListener("click", (e) => {
   const btn = e.target.closest("button");
-  if (btn && confirm("Usunąć ten wpis?")) {
+  if (btn) {
     saveLog(loadLog().filter((r) => r.id !== btn.dataset.id));
     renderLog();
   }

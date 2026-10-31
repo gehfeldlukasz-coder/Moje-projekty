@@ -115,3 +115,4 @@ footer { text-align: center; padding: 2rem; background: var(--navy); color: var(
   .nav .links a { margin: 0 .8rem 0 0; font-size: .9rem; }
   .log { font-size: .85rem; }
 }
+.caption-input { padding: .6rem; border: 1px solid #c8d3dd; border-radius: 8px; font-size: .95rem; margin-right: .5rem; min-width: 240px; }
