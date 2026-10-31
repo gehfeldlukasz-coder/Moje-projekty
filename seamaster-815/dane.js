@@ -7,7 +7,7 @@ const JACHT = {
   rejestracja: "PL00016R",         // ← sprawdź z dokumentami
   typ: "Seamaster 815",
   portMacierzysty: "Stepnica",
-  rokBudowy: "uzupełnij",           // np. 1978
+  rokBudowy: "1981",           // np. 1978
   bandera: "Polska",
   opis:
     "Klasyczny, dzielny jacht rodzinny zaprojektowany przez biuro Holman & Pye. " +
@@ -26,13 +26,13 @@ const JACHT = {
     { etykieta: "Kadłub", wartosc: "laminat (GRP)", ikona: "◆" },
     { etykieta: "Silnik stacjonarny", wartosc: "Volvo Penta MD6A, 10 KM", ikona: "⚙" },
     { etykieta: "Silnik zaburtowy", wartosc: "Storm, 20 KM", ikona: "⚙" },
-    { etykieta: "Koje", wartosc: "uzupełnij", ikona: "☾" },
+    { etykieta: "Koje", wartosc: "4", ikona: "☾" },
   ],
 
   historia: [
     { rok: "1975", tekst: "Projekt jachtu powstaje w biurze Holman & Pye." },
     { rok: "1976", tekst: "Start produkcji seryjnej Seamaster 815." },
-    { rok: "1981", tekst: "Koniec produkcji – powstało ok. 136 egzemplarzy." },
+    { rok: "1981", tekst: "Budowa Tatulatora – jednego z ostatnich egzemplarzy. Koniec produkcji, powstało ok. 136 jachtów." },
     { rok: "17.10.2026", tekst: "Transport lądem na przyczepie: Stepnica → Budzień." },
     { rok: "dziś", tekst: "Jako „Tatulator” pływa pod polską banderą, port macierzysty: Stepnica. ⚓" },
   ],
