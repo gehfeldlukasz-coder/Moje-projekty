@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seamaster 815 – mój jacht</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="nav">
+    <a href="#start" class="logo">⚓ <span data-bind="nazwa"></span></a>
+    <div class="links">
+      <a href="#dane">Dane</a>
+      <a href="#historia">Historia</a>
+      <a href="#galeria">Galeria</a>
+      <a href="#dziennik">Dziennik</a>
+      <a href="#wyposazenie">Wyposażenie</a>
+    </div>
+  </nav>
+
+  <header id="start" class="hero">
+    <div class="hero-text">
+      <p class="eyebrow">Jacht żaglowy · <span data-bind="typ"></span></p>
+      <h1 data-bind="nazwa"></h1>
+      <p class="lead" data-bind="opis"></p>
+      <div class="badges">
+        <span>Port: <b data-bind="portMacierzysty"></b></span>
+        <span>Rok budowy: <b data-bind="rokBudowy"></b></span>
+        <span>Bandera: <b data-bind="bandera"></b></span>
+      </div>
+    </div>
+
+    <svg class="yacht" viewBox="0 0 400 320" aria-label="Sylwetka jachtu Seamaster 815">
+      <!-- maszt -->
+      <line x1="190" y1="20" x2="190" y2="225" stroke="#e8eef5" stroke-width="4" />
+      <!-- grot -->
+      <path class="sail main" d="M196 28 L196 218 L320 218 Z" />
+      <!-- fok -->
+      <path class="sail jib" d="M184 34 L70 222 L184 222 Z" />
+      <!-- bom -->
+      <line x1="190" y1="220" x2="325" y2="220" stroke="#e8eef5" stroke-width="4" />
+      <!-- kadłub -->
+      <path d="M40 228 L360 228 L336 262 Q200 274 78 262 Z" fill="#fdfdfd" />
+      <path d="M48 240 L352 240" stroke="#c0392b" stroke-width="5" />
+      <!-- nadbudówka -->
+      <path d="M150 228 L162 214 L262 214 L280 228 Z" fill="#dfe7ef" />
+      <!-- kil -->
+      <path d="M180 268 L196 310 L222 310 L222 268 Z" fill="#14324f" opacity="0.6" />
+      <!-- woda -->
+      <path class="wave" d="M0 266 Q25 256 50 266 T100 266 T150 266 T200 266 T250 266 T300 266 T350 266 T400 266 T450 266 T500 266 T550 266 V320 H0 Z" fill="#1e5a8a" opacity="0.85" />
+    </svg>
+  </header>
+
+  <main>
+    <section id="dane">
+      <h2>Dane techniczne</h2>
+      <div class="grid specs" id="specs"></div>
+      <p class="note">Dane klasy według dostępnych źródeł – mogą się nieznacznie różnić między egzemplarzami.</p>
+    </section>
+
+    <section id="historia">
+      <h2>Historia</h2>
+      <ol class="timeline" id="timeline"></ol>
+    </section>
+
+    <section id="galeria">
+      <h2>Galeria</h2>
+      <label class="btn">
+        + Dodaj zdjęcia
+        <input type="file" id="photoInput" accept="image/*" multiple hidden />
+      </label>
+      <div class="gallery" id="gallery"></div>
+      <p class="empty" id="galleryEmpty">Brak zdjęć – dodaj pierwsze zdjęcie swojego jachtu!</p>
+    </section>
+
+    <section id="dziennik">
+      <h2>Dziennik rejsów</h2>
+      <form id="logForm" class="log-form">
+        <input type="date" name="data" required />
+        <input type="text" name="trasa" placeholder="Trasa, np. Gdynia → Hel" required />
+        <input type="number" name="mile" placeholder="Mile (NM)" min="0" step="0.1" />
+        <input type="text" name="wiatr" placeholder="Wiatr, np. W 4°B" />
+        <input type="text" name="uwagi" placeholder="Uwagi" />
+        <button class="btn" type="submit">Zapisz rejs</button>
+      </form>
+      <div class="stats" id="stats"></div>
+      <table class="log">
+        <thead><tr><th>Data</th><th>Trasa</th><th>Mile</th><th>Wiatr</th><th>Uwagi</th><th></th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </section>
+
+    <section id="wyposazenie">
+      <h2>Wyposażenie</h2>
+      <ul class="equipment" id="equipment"></ul>
+    </section>
+  </main>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <img id="lightboxImg" alt="" />
+    <p id="lightboxCaption"></p>
+  </div>
+
+  <footer>⚓ <span data-bind="nazwa"></span> · Seamaster 815 · projekt Holman &amp; Pye</footer>
+
+  <script src="dane.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
